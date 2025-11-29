@@ -5,7 +5,7 @@ const Header = ({ isAuthenticated = false, userName = "Иван" }) => {
     return (
         <nav className="navbar navbar-expand-lg bg-body-tertiary modern-navbar">
             <div className="container-fluid">
-                <a className="navbar-brand" href="/main">
+                <a className="navbar-brand" href="/">
                     <img src={logo} alt="Логотип YarfPets" style={{ borderRadius: 8, width: 80, height: 80 }} />
                 </a>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
