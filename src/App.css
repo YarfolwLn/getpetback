@@ -1,0 +1,128 @@
+/* Импортируем все стили из ваших HTML файлов */
+
+/* Основные стили */
+.navbar-nav .dropdown {
+    display: none;
+}
+
+.navbar-brand img {
+    width: 80px;
+    height: 80px;
+}
+
+/* Стили для квадратных изображений */
+.card-img-top {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.carousel-item img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.modal-body img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+/* Центрирование хедера */
+.modern-navbar {
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+@media (min-width: 768px) {
+    .modern-navbar .container-fluid {
+        justify-content: center;
+    }
+
+    .modern-navbar .navbar-collapse {
+        flex-grow: 0;
+    }
+}
+
+@media (min-width: 1200px) {
+    .modern-navbar {
+        padding-left: 10%;
+        padding-right: 10%;
+    }
+}
+
+@media (min-width: 1400px) {
+    .modern-navbar {
+        padding-left: 15%;
+        padding-right: 15%;
+    }
+}
+
+/* Центрирование основного контента */
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Центрирование футера */
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Стили для шапки поиска */
+.search-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+}
+
+.btn-search {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.btn-search:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    color: white;
+}
+
+/* Добавьте сюда остальные стили из ваших HTML файлов */
+/* Стили для профиля, регистрации, поиска и т.д. */
+
+.district-badge {
+    background-color: #e9ecef;
+    color: #495057;
+    font-size: 0.8rem;
+}
+
+/* Стили для спиннера */
+.btn-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: -0.125em;
+    border: 0.15em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+/* Стили для карусели */
+.carousel-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 50px;
+}
+
+.carousel-title {
+    text-align: center;
+    margin-bottom: 40px;
+    font-weight: 600;
+}
+
+/* Добавьте все остальные стили из ваших HTML файлов */
