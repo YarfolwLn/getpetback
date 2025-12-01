@@ -1,7 +1,20 @@
 import React from 'react';
+import ApiService from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
-const LogoutModal = () => {
-    return(
+const LogoutModal = ({ onLogout }) => {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        ApiService.clearToken();
+        if (onLogout) {
+            onLogout();
+        } else {
+            navigate('/');
+        }
+    };
+
+    return (
         <div className="modal fade" id="logoutModal" tabIndex="-1" aria-hidden="true">
             <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content">
@@ -18,14 +31,19 @@ const LogoutModal = () => {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <a href="/" className="btn btn-danger">
+                        <button 
+                            type="button" 
+                            className="btn btn-danger" 
+                            onClick={handleLogout}
+                            data-bs-dismiss="modal"
+                        >
                             <i className="bi bi-box-arrow-right me-1"></i>Выйти
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    )
+    );
 };
 
 export default LogoutModal;

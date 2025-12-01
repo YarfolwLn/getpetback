@@ -1,17 +1,63 @@
-import React, { useState } from 'react';
+// src/components/search-header.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const SearchHeader = () => {
-    const [searchQuery, setSearchQuery] = useState('');
+const SearchHeader = ({ searchQuery: externalSearchQuery, onSearchChange, suggestions = [] }) => {
+    const [localSearchQuery, setLocalSearchQuery] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const suggestionsRef = useRef(null);
     const navigate = useNavigate();
+
+    // Синхронизация с внешним состоянием
+    useEffect(() => {
+        if (externalSearchQuery !== undefined) {
+            setLocalSearchQuery(externalSearchQuery);
+        }
+    }, [externalSearchQuery]);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        // Переход на страницу поиска с передачей параметра
-        navigate(`/search?animalType=${encodeURIComponent(searchQuery)}`);
+        setShowSuggestions(false);
+        
+        if (localSearchQuery.trim()) {
+            navigate(`/search?animalType=${encodeURIComponent(localSearchQuery)}`);
+        }
     };
 
-    return(
+    const handleInputChange = (e) => {
+        const value = e.target.value;
+        setLocalSearchQuery(value);
+        
+        if (onSearchChange) {
+            onSearchChange(value);
+        }
+        
+        setShowSuggestions(value.length > 0);
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        setLocalSearchQuery(suggestion.kind || suggestion.description || '');
+        setShowSuggestions(false);
+        
+        if (onSearchChange) {
+            onSearchChange(suggestion.kind || suggestion.description || '');
+        }
+    };
+
+    const handleClickOutside = (e) => {
+        if (suggestionsRef.current && !suggestionsRef.current.contains(e.target)) {
+            setShowSuggestions(false);
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    return (
         <div className="search-header">
             <div className="container">
                 <div className="row align-items-center">
@@ -23,18 +69,50 @@ const SearchHeader = () => {
                         <div className="card">
                             <div className="card-body">
                                 <form id="mainSearchForm" onSubmit={handleSearch}>
-                                    <div className="input-group">
+                                    <div className="input-group" ref={suggestionsRef}>
                                         <input 
                                             type="text" 
                                             className="form-control" 
                                             id="mainSearchInput" 
                                             placeholder="Введите вид животного, породу, приметы..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            value={localSearchQuery}
+                                            onChange={handleInputChange}
+                                            onFocus={() => {
+                                                if (localSearchQuery.length > 0 && suggestions.length > 0) {
+                                                    setShowSuggestions(true);
+                                                }
+                                            }}
+                                            autoComplete="off"
                                         />
                                         <button className="btn btn-search" type="submit">
                                             <i className="bi bi-search"></i>
                                         </button>
+                                        
+                                        {showSuggestions && suggestions.length > 0 && (
+                                            <div className="suggestions-dropdown">
+                                                {suggestions.map((suggestion, index) => (
+                                                    <div 
+                                                        key={index}
+                                                        className="suggestion-item"
+                                                        onClick={() => handleSuggestionClick(suggestion)}
+                                                    >
+                                                        <div className="suggestion-text">
+                                                            <strong>{suggestion.kind}</strong>
+                                                            <small className="text-muted d-block">
+                                                                {suggestion.description && suggestion.description.length > 50 
+                                                                    ? `${suggestion.description.substring(0, 50)}...`
+                                                                    : suggestion.description}
+                                                            </small>
+                                                        </div>
+                                                        <div className="suggestion-meta">
+                                                            <span className="badge bg-light text-dark">
+                                                                {suggestion.district}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </form>
                             </div>
@@ -42,8 +120,51 @@ const SearchHeader = () => {
                     </div>
                 </div>
             </div>
+            
+            <style jsx>{`
+                .suggestions-dropdown {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    border: 1px solid #dee2e6;
+                    border-top: none;
+                    border-radius: 0 0 0.375rem 0.375rem;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    z-index: 1000;
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+                
+                .suggestion-item {
+                    padding: 10px 15px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid #f8f9fa;
+                    transition: background-color 0.2s;
+                }
+                
+                .suggestion-item:hover {
+                    background-color: #f8f9fa;
+                }
+                
+                .suggestion-item:last-child {
+                    border-bottom: none;
+                }
+                
+                .suggestion-text {
+                    flex: 1;
+                }
+                
+                .suggestion-meta {
+                    margin-left: 10px;
+                }
+            `}</style>
         </div>
-    )
+    );
 };
 
 export default SearchHeader;

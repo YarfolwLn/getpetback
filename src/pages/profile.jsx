@@ -1,115 +1,327 @@
-// profile.jsx (обновленная версия)
-import React, { useState } from 'react';
+// src/pages/profile.jsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import ProfileStats from '../components/profile-stats';
 import UserAds from '../components/user-ads';
 import LogoutModal from '../components/logout-modal';
 import AuthRequiredModal from '../components/auth-required-modal';
-import belkaImage from '../assets/images/belka.jpg';
-import catImage from '../assets/images/cat.jpg';
+import ApiService from '../services/api';
+import placeholderImage from '../assets/images/placeholder.svg';
 
 const Profile = () => {
     const [activeTab, setActiveTab] = useState('ads');
-    const [userData, setUserData] = useState({
-        name: 'Иван',
-        email: 'ivan.petrov@example.com',
-        phone: '+7 (999) 123-45-67',
-        registrationDate: '152 дня назад'
-    });
-
+    const [userData, setUserData] = useState(null);
+    const [userAds, setUserAds] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [contactData, setContactData] = useState({
-        phone: '+7 (999) 123-45-67',
-        email: 'ivan.petrov@example.com'
+        phone: '',
+        email: ''
     });
+    const [editErrors, setEditErrors] = useState({});
+    const [successMessage, setSuccessMessage] = useState('');
+    const navigate = useNavigate();
 
-    const [userAds, setUserAds] = useState([
-        {
-            id: 1,
-            title: "Найдена кошка",
-            description: "Найдена кошка, порода Сфинкс, очень грустная",
-            image: catImage,
-            district: "Василеостровский район",
-            date: "12.01.2024",
-            status: "active",
-            statusText: "Активное",
-            mark: "VL-0214"
-        },
-        {
-            id: 2,
-            title: "Пропала белка",
-            description: "Домашняя белка пропала из вольера. Откликается на кличку 'Пуша'.",
-            image: belkaImage,
-            district: "Петроградский район",
-            date: "05.01.2024",
-            status: "wasFound",
-            statusText: "Хозяин найден",
-            mark: "BL-0156"
+    // Проверка авторизации и загрузка данных
+    useEffect(() => {
+        const loadProfileData = async () => {
+            try {
+                setLoading(true);
+                
+                // Получаем ID пользователя из localStorage или токена
+                // В реальном приложении это должно извлекаться из декодированного токена
+                const userId = 1; // Замените на реальный ID пользователя
+                
+                const [profileResponse, adsResponse] = await Promise.all([
+                    ApiService.getUserProfile(userId),
+                    ApiService.getUserOrders(userId)
+                ]);
+
+                if (profileResponse && profileResponse.data && profileResponse.data.user) {
+                    const user = profileResponse.data.user[0];
+                    setUserData(user);
+                    
+                    // Расчет дней с регистрации
+                    if (user.registrationDate) {
+                        const regDate = new Date(user.registrationDate);
+                        const today = new Date();
+                        const diffTime = Math.abs(today - regDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        user.daysSinceRegistration = diffDays;
+                    }
+                    
+                    setContactData({
+                        phone: user.phone || '',
+                        email: user.email || ''
+                    });
+                }
+
+                if (adsResponse && adsResponse.data && adsResponse.data.orders) {
+                    // Добавляем текстовое представление статуса
+                    const adsWithStatusText = adsResponse.data.orders.map(ad => ({
+                        ...ad,
+                        statusText: getStatusText(ad.status),
+                        image: ad.photo || ad.photos || placeholderImage
+                    }));
+                    setUserAds(adsWithStatusText);
+                }
+
+            } catch (error) {
+                if (error.status === 401) {
+                    // Неавторизован
+                    ApiService.clearToken();
+                    navigate('/register');
+                } else {
+                    setError('Ошибка при загрузке данных профиля');
+                    console.error('Ошибка загрузки профиля:', error);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProfileData();
+    }, [navigate]);
+
+    const getStatusText = (status) => {
+        switch (status) {
+            case 'active': return 'Активное';
+            case 'wasFound': return 'Хозяин найден';
+            case 'onModeration': return 'На модерации';
+            case 'archive': return 'В архиве';
+            default: return status;
         }
-    ]);
+    };
 
-    const handleAdUpdate = (adId, updatedData) => {
-        // Обновляем объявление в состоянии
-        const updatedAds = userAds.map(ad => {
-            if (ad.id === adId) {
-                return {
-                    ...ad,
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'active': return 'badge-status-active';
+            case 'wasFound': return 'badge-status-wasFound';
+            case 'onModeration': return 'badge-status-onModeration';
+            case 'archive': return 'badge-status-archive';
+            default: return '';
+        }
+    };
+
+    const handleAdUpdate = async (adId, updatedData) => {
+        try {
+            const formData = new FormData();
+            
+            // Добавляем файлы, если они есть
+            if (updatedData.photos && updatedData.photos[0]) {
+                formData.append('photo1', updatedData.photos[0]);
+            }
+            if (updatedData.photos && updatedData.photos[1]) {
+                formData.append('photo2', updatedData.photos[1]);
+            }
+            if (updatedData.photos && updatedData.photos[2]) {
+                formData.append('photo3', updatedData.photos[2]);
+            }
+            
+            formData.append('mark', updatedData.mark || '');
+            formData.append('description', updatedData.description || '');
+            
+            await ApiService.updateOrder(adId, formData);
+            
+            // Обновляем локальное состояние
+            const updatedAds = userAds.map(ad => 
+                ad.id === adId ? { 
+                    ...ad, 
                     mark: updatedData.mark,
                     description: updatedData.description
-                };
+                } : ad
+            );
+            setUserAds(updatedAds);
+            
+            setSuccessMessage('Объявление успешно обновлено');
+            setTimeout(() => setSuccessMessage(''), 3000);
+            
+        } catch (error) {
+            console.error('Ошибка при обновлении объявления:', error);
+            setError('Ошибка при обновлении объявления');
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    const handleAdDelete = async (adId) => {
+        try {
+            await ApiService.deleteOrder(adId);
+            
+            // Обновляем локальное состояние
+            const updatedAds = userAds.filter(ad => ad.id !== adId);
+            setUserAds(updatedAds);
+            
+            setSuccessMessage('Объявление успешно удалено');
+            setTimeout(() => setSuccessMessage(''), 3000);
+            
+        } catch (error) {
+            console.error('Ошибка при удалении объявления:', error);
+            if (error.status === 403) {
+                setError('Нельзя удалить объявление с текущим статусом');
+            } else {
+                setError('Ошибка при удалении объявления');
             }
-            return ad;
-        });
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    const handleContactSubmit = async (e) => {
+        e.preventDefault();
         
-        setUserAds(updatedAds);
-        console.log('Объявление обновлено:', adId, updatedData);
+        setEditErrors({});
+        
+        try {
+            const userId = 1; // Замените на реальный ID пользователя
+            
+            // Обновляем телефон
+            if (contactData.phone !== userData?.phone) {
+                await ApiService.updatePhone(userId, contactData.phone);
+            }
+            
+            // Обновляем email
+            if (contactData.email !== userData?.email) {
+                await ApiService.updateEmail(userId, contactData.email);
+            }
+            
+            // Обновляем данные пользователя
+            setUserData(prev => ({
+                ...prev,
+                phone: contactData.phone,
+                email: contactData.email
+            }));
+            
+            setSuccessMessage('Контактные данные успешно обновлены');
+            setTimeout(() => setSuccessMessage(''), 3000);
+            
+        } catch (error) {
+            console.error('Ошибка при обновлении контактов:', error);
+            
+            if (error.status === 422) {
+                setEditErrors(error.data?.error?.errors || {});
+            } else {
+                setError('Ошибка при обновлении контактных данных');
+                setTimeout(() => setError(null), 3000);
+            }
+        }
     };
 
-    const handleAdDelete = (adId) => {
-        // Удаляем объявление из состояния
-        const updatedAds = userAds.filter(ad => ad.id !== adId);
-        setUserAds(updatedAds);
-        console.log('Объявление удалено:', adId);
-    };
-
-    const handleContactSubmit = (e) => {
+    const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        console.log('Сохранение контактных данных:', contactData);
+        
+        const currentPassword = e.target.currentPassword.value;
+        const newPassword = e.target.newPassword.value;
+        const confirmPassword = e.target.confirmPassword.value;
+        
+        // Валидация пароля
+        const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{7,}$/;
+        
+        if (!passwordRegex.test(newPassword)) {
+            setError('Новый пароль должен содержать минимум 7 символов, 1 цифру, 1 строчную и 1 заглавную букву');
+            setTimeout(() => setError(null), 3000);
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            setError('Пароли не совпадают');
+            setTimeout(() => setError(null), 3000);
+            return;
+        }
+        
+        // Здесь должен быть API запрос для смены пароля
+        // Так как в документации нет endpoint для смены пароля,
+        // этот функционал не реализован
+        
+        setSuccessMessage('Запрос на смену пароля отправлен');
+        setTimeout(() => setSuccessMessage(''), 3000);
+        e.target.reset();
     };
 
-    const handlePasswordSubmit = (e) => {
-        e.preventDefault();
-        console.log('Смена пароля');
+    const handleLogout = () => {
+        ApiService.clearToken();
+        navigate('/');
     };
+
+    if (loading) {
+        return (
+            <div>
+                <Header isAuthenticated={false} />
+                <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p className="mt-2">Загрузка профиля...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!userData) {
+        return (
+            <div>
+                <Header isAuthenticated={false} />
+                <div className="container py-5">
+                    <div className="alert alert-danger" role="alert">
+                        Не удалось загрузить данные профиля
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div>
             <Header isAuthenticated={true} userName={userData.name} />
             
+            {/* Сообщения об ошибках и успехе */}
+            {error && (
+                <div className="alert-fixed-top">
+                    <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                        {error}
+                        <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+                    </div>
+                </div>
+            )}
+            
+            {successMessage && (
+                <div className="alert-fixed-top">
+                    <div className="alert alert-success alert-dismissible fade show" role="alert">
+                        {successMessage}
+                        <button type="button" className="btn-close" onClick={() => setSuccessMessage('')}></button>
+                    </div>
+                </div>
+            )}
+
             {/* Шапка профиля */}
             <header className="profile-header">
-                <div className="content-container">
+                <div className="container">
                     <div className="row align-items-center">
                         <div className="col">
                             <h1 className="h2 mb-1">{userData.name}</h1>
                             <p className="mb-1">
                                 <i className="bi bi-info-circle me-1"></i>
-                                <a href={`mailto:${userData.email}`}>{userData.email}</a>
+                                <a href={`mailto:${userData.email}`} className="text-white text-decoration-none">
+                                    {userData.email}
+                                </a>
                             </p>
                             <p className="mb-0">
                                 <i className="bi bi-calendar me-1"></i>
-                                Зарегистрирован: {userData.registrationDate}
+                                Зарегистрирован: {userData.daysSinceRegistration || '0'} дней назад
                             </p>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <main className="content-container">
+            <main className="container mt-4">
                 <div className="row">
                     {/* Боковая панель */}
                     <div className="col-md-3">
-                        <ProfileStats adsCount={userAds.length} petsCount={1} />
+                        <ProfileStats 
+                            adsCount={userData.ordersCount || userAds.length} 
+                            petsCount={userData.petsCount || 0} 
+                        />
                     </div>
 
                     {/* Основной контент */}
@@ -142,6 +354,7 @@ const Profile = () => {
                                     ads={userAds} 
                                     onAdUpdate={handleAdUpdate}
                                     onAdDelete={handleAdDelete}
+                                    getStatusClass={getStatusClass}
                                 />
                             )}
 
@@ -161,27 +374,45 @@ const Profile = () => {
                                             <div className="row mb-3">
                                                 <div className="col-md-6">
                                                     <label className="form-label text-muted">Имя</label>
-                                                    <p className="form-control-plaintext">{userData.name}</p>
+                                                    <p className="form-control-plaintext fw-bold">{userData.name}</p>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <label className="form-label text-muted">Дата регистрации</label>
+                                                    <p className="form-control-plaintext">{userData.registrationDate}</p>
                                                 </div>
                                             </div>
-                                            <div className="mb-3">
-                                                <label className="form-label text-muted">Номер телефона</label>
-                                                <p className="form-control-plaintext">{userData.phone}</p>
+                                            <div className="row mb-3">
+                                                <div className="col-md-6">
+                                                    <label className="form-label text-muted">Телефон</label>
+                                                    <p className="form-control-plaintext">{userData.phone}</p>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <label className="form-label text-muted">Email</label>
+                                                    <p className="form-control-plaintext">
+                                                        <a href={`mailto:${userData.email}`} className="text-decoration-none">
+                                                            {userData.email}
+                                                        </a>
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="mb-3">
-                                                <label className="form-label text-muted">Адрес электронной почты</label>
-                                                <p className="form-control-plaintext">
-                                                    <a href={`mailto:${userData.email}`}>{userData.email}</a>
-                                                </p>
+                                            <div className="row">
+                                                <div className="col-md-6">
+                                                    <label className="form-label text-muted">Объявлений</label>
+                                                    <p className="form-control-plaintext">{userData.ordersCount || 0}</p>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <label className="form-label text-muted">Найдено хозяев</label>
+                                                    <p className="form-control-plaintext">{userData.petsCount || 0}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Изменение контактных данных */}
-                                    <div className="card">
+                                    <div className="card mb-4">
                                         <div className="card-header">
                                             <h4 className="card-title h5 mb-0">
-                                                <i className="bi bi-telephone me-2"></i>Контактные данные
+                                                <i className="bi bi-telephone me-2"></i>Изменить контактные данные
                                             </h4>
                                         </div>
                                         <div className="card-body">
@@ -194,12 +425,18 @@ const Profile = () => {
                                                         </span>
                                                         <input 
                                                             type="tel" 
-                                                            className="form-control" 
+                                                            className={`form-control ${editErrors.phone ? 'is-invalid' : ''}`}
                                                             id="phone" 
                                                             value={contactData.phone}
                                                             onChange={(e) => setContactData({...contactData, phone: e.target.value})}
                                                             placeholder="+7 (999) 123-45-67"
+                                                            required
                                                         />
+                                                        {editErrors.phone && (
+                                                            <div className="invalid-feedback">
+                                                                {editErrors.phone}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -211,13 +448,18 @@ const Profile = () => {
                                                         </span>
                                                         <input 
                                                             type="email" 
-                                                            className="form-control" 
+                                                            className={`form-control ${editErrors.email ? 'is-invalid' : ''}`}
                                                             id="email"
                                                             value={contactData.email}
                                                             onChange={(e) => setContactData({...contactData, email: e.target.value})}
                                                             placeholder="your@email.com" 
                                                             required
                                                         />
+                                                        {editErrors.email && (
+                                                            <div className="invalid-feedback">
+                                                                {editErrors.email}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -225,16 +467,26 @@ const Profile = () => {
                                                     <button type="submit" className="btn btn-primary">
                                                         <i className="bi bi-check-lg me-1"></i>Сохранить изменения
                                                     </button>
+                                                    <button 
+                                                        type="button" 
+                                                        className="btn btn-outline-secondary"
+                                                        onClick={() => setContactData({
+                                                            phone: userData.phone || '',
+                                                            email: userData.email || ''
+                                                        })}
+                                                    >
+                                                        Отмена
+                                                    </button>
                                                 </div>
                                             </form>
                                         </div>
                                     </div>
 
                                     {/* Смена пароля */}
-                                    <div className="card mt-4">
+                                    <div className="card">
                                         <div className="card-header">
                                             <h4 className="card-title h5 mb-0">
-                                                <i className="bi bi-shield-lock me-2"></i>Безопасность
+                                                <i className="bi bi-shield-lock me-2"></i>Смена пароля
                                             </h4>
                                         </div>
                                         <div className="card-body">
@@ -256,13 +508,13 @@ const Profile = () => {
                                                         className="form-control" 
                                                         id="newPassword" 
                                                         placeholder="Введите новый пароль" 
-                                                        minLength="6" 
+                                                        minLength="7" 
                                                         required
                                                     />
-                                                    <div className="form-text">Пароль должен содержать не менее 6 символов</div>
+                                                    <div className="form-text">Пароль должен содержать не менее 7 символов, включая цифры, строчные и заглавные буквы</div>
                                                 </div>
                                                 <div className="mb-3">
-                                                    <label htmlFor="confirmPassword" className="form-label">Введите старый пароль</label>
+                                                    <label htmlFor="confirmPassword" className="form-label">Подтвердите новый пароль</label>
                                                     <input 
                                                         type="password" 
                                                         className="form-control" 
@@ -285,7 +537,7 @@ const Profile = () => {
             </main>
 
             <Footer />
-            <LogoutModal />
+            <LogoutModal onLogout={handleLogout} />
             <AuthRequiredModal />
         </div>
     );

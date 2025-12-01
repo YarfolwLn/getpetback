@@ -1,17 +1,15 @@
+// src/pages/searchpage.jsx
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import SearchHeader from '../components/search-header';
-import belkaImage from '../assets/images/belka.jpg';
-import catImage from '../assets/images/cat.jpg';
-import ezhImage from '../assets/images/ezh.jpg';
-import tigerImage from '../assets/images/tiger.jpg';
-import dogImage from '../assets/images/dog.jpg';
-import parrotImage from '../assets/images/parrot.jpg';
+import ApiService from '../services/api';
+import placeholderImage from '../assets/images/placeholder.svg';
 
 const SearchPage = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useState({
         district: '',
         animalType: ''
@@ -20,218 +18,33 @@ const SearchPage = () => {
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const pageSize = 8;
+    const [totalPages, setTotalPages] = useState(0);
+    const [searchSuggestions, setSearchSuggestions] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const pageSize = 10;
 
-    const allAds = [
-        {
-            id: 1,
-            title: "Найдена кошка",
-            description: "Пушистая кошка найдена в центре города. Ищет хозяев. Приучена к лотку, очень ласковая.",
-            image: catImage,
-            district: "Центральный район",
-            animalType: "кошка",
-            date: "12.01.2024",
-            status: "Найдено",
-            badge: "bg-success"
-        },
-        {
-            id: 2,
-            title: "Найдена белка",
-            description: "Милая белочка ищет новый дом. Очень активная и дружелюбная.",
-            image: belkaImage,
-            district: "Петроградский район",
-            animalType: "белка",
-            date: "15.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-79",
-            author: "Мария",
-            badge: "bg-success"
-        },
-        {
-            id: 3,
-            title: "Найден ёж",
-            description: "Колючий ёжик найден в парке. Требуется специальный уход. Очень добрый, несмотря на колючки.",
-            image: ezhImage,
-            district: "Невский район",
-            animalType: "ёж",
-            date: "08.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-80",
-            author: "Анна",
-            badge: "bg-success"
-        },
-        {
-            id: 4,
-            title: "Найден тигрёнок",
-            description: "Маленький тигрёнок найден в пригороде. Требуется специализированный уход и содержание.",
-            image: tigerImage,
-            district: "Приморский район",
-            animalType: "тигр",
-            date: "15.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-81",
-            author: "Сергей",
-            badge: "bg-success"
-        },
-        {
-            id: 5,
-            title: "Пропала собака",
-            description: "Пропала собака породы хаски. Кобель, 2 года. Откликнется на кличку Рекс. Носит синий ошейник.",
-            image: dogImage,
-            district: "Выборгский район",
-            animalType: "собака",
-            date: "10.01.2024",
-            status: "Пропало",
-            contact: "+7 (911) 234-56-82",
-            author: "Алексей",
-            badge: "bg-danger"
-        },
-        {
-            id: 6,
-            title: "Найден попугай",
-            description: "Найден волнистый попугай голубого окраса. Ищет хозяев. Умеет говорить несколько слов.",
-            image: parrotImage,
-            district: "Фрунзенский район",
-            animalType: "попугай",
-            date: "07.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-83",
-            author: "Ольга",
-            badge: "bg-success"
-        },
-        {
-            id: 7,
-            title: "Найдена черепаха",
-            description: "Сухопутная черепаха найдена в парке. Ищет хозяев, требуется специальный уход.",
-            image: "https://via.placeholder.com/300x300?text=Черепаха",
-            district: "Кировский район",
-            animalType: "черепаха",
-            date: "20.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-84",
-            author: "Дмитрий",
-            badge: "bg-success"
-        },
-        {
-            id: 8,
-            title: "Пропал хомяк",
-            description: "Пропал карликовый хомяк. Очень маленький, белого окраса. Откликается на кличку Пуфик.",
-            image: "https://via.placeholder.com/300x300?text=Хомяк",
-            district: "Московский район",
-            animalType: "хомяк",
-            date: "18.01.2024",
-            status: "Пропало",
-            contact: "+7 (911) 234-56-85",
-            author: "Елена",
-            badge: "bg-danger"
-        },
-        {
-            id: 9,
-            title: "Найден кролик",
-            description: "Декоративный кролик найден во дворе. Очень пугливый, но добрый. Ищет хозяев.",
-            image: "https://via.placeholder.com/300x300?text=Кролик",
-            district: "Фрунзенский район",
-            animalType: "кролик",
-            date: "16.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-86",
-            author: "Андрей",
-            badge: "bg-success"
-        },
-        {
-            id: 10,
-            title: "Пропала морская свинка",
-            description: "Пропала морская свинка рыжего окраса. Очень общительная, любит овощи.",
-            image: "https://via.placeholder.com/300x300?text=Морская+свинка",
-            district: "Калининский район",
-            animalType: "морская свинка",
-            date: "14.01.2024",
-            status: "Пропало",
-            contact: "+7 (911) 234-56-87",
-            author: "Светлана",
-            badge: "bg-danger"
-        },
-        {
-            id: 11,
-            title: "Найден уж",
-            description: "Неядовитый уж найден на дачном участке. Совершенно безопасен, ищет новый дом.",
-            image: "https://via.placeholder.com/300x300?text=Уж",
-            district: "Курортный район",
-            animalType: "уж",
-            date: "13.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-88",
-            author: "Виктор",
-            badge: "bg-success"
-        },
-        {
-            id: 12,
-            title: "Пропала канарейка",
-            description: "Пропала желтая канарейка. Очень красиво поет, откликается на свист.",
-            image: "https://via.placeholder.com/300x300?text=Канарейка",
-            district: "Адмиралтейский район",
-            animalType: "канарейка",
-            date: "11.01.2024",
-            status: "Пропало",
-            contact: "+7 (911) 234-56-89",
-            author: "Наталья",
-            badge: "bg-danger"
-        },
-        {
-            id: 13,
-            title: "Найден щенок",
-            description: "Маленький щенок найден в парке. Очень игривый и дружелюбный, ищет хозяев.",
-            image: "https://via.placeholder.com/300x300?text=Щенок",
-            district: "Приморский район",
-            animalType: "собака",
-            date: "22.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-90",
-            author: "Михаил",
-            badge: "bg-success"
-        },
-        {
-            id: 14,
-            title: "Пропал котенок",
-            description: "Пропал маленький котенок серого окраса. Очень пугливый, откликается на 'кис-кис'.",
-            image: "https://via.placeholder.com/300x300?text=Котенок",
-            district: "Василеостровский район",
-            animalType: "кошка",
-            date: "21.01.2024",
-            status: "Пропало",
-            contact: "+7 (911) 234-56-91",
-            author: "Оксана",
-            badge: "bg-danger"
-        },
-        {
-            id: 15,
-            title: "Найдена ящерица",
-            description: "Экзотическая ящерица найдена в теплице. Требуется специальный уход и террариум.",
-            image: "https://via.placeholder.com/300x300?text=Ящерица",
-            district: "Петродворцовый район",
-            animalType: "ящерица",
-            date: "19.01.2024",
-            status: "Найдено",
-            contact: "+7 (911) 234-56-92",
-            author: "Артем",
-            badge: "bg-success"
-        },
-        {
-            id: 16,
-            title: "Пропала крыса",
-            description: "Пропала домашняя крыса белого окраса. Очень умная, откликается на кличку Нюша.",
-            image: "https://via.placeholder.com/300x300?text=Крыса",
-            district: "Красногвардейский район",
-            animalType: "крыса",
-            date: "17.01.2024",
-            status: "Пропало",
-            contact: "+7 (911) 234-56-93",
-            author: "Ирина",
-            badge: "bg-danger"
-        }
+    const districts = [
+        'Адмиралтейский район',
+        'Василеостровский район',
+        'Выборгский район',
+        'Калининский район',
+        'Кировский район',
+        'Колпинский район',
+        'Красногвардейский район',
+        'Красносельский район',
+        'Кронштадтский район',
+        'Курортный район',
+        'Московский район',
+        'Невский район',
+        'Петроградский район',
+        'Петродворцовый район',
+        'Приморский район',
+        'Пушкинский район',
+        'Фрунзенский район',
+        'Центральный район'
     ];
 
-    // Функция для получения параметров из URL
+    // Получение параметров из URL
     const getQueryParams = () => {
         const params = new URLSearchParams(location.search);
         return {
@@ -240,53 +53,115 @@ const SearchPage = () => {
         };
     };
 
-    // При изменении URL (например, при переходе с главной страницы)
+    // При изменении URL
     useEffect(() => {
         const queryParams = getQueryParams();
-        setSearchParams(prev => ({
-            ...prev,
+        const newSearchParams = {
             animalType: queryParams.animalType,
             district: queryParams.district
-        }));
+        };
         
-        // Запускаем поиск с учетом параметров из URL
-        performSearch(1, queryParams.animalType, queryParams.district);
+        setSearchParams(newSearchParams);
+        setSearchQuery(queryParams.animalType);
+        
+        if (queryParams.animalType || queryParams.district) {
+            performSearch(1, newSearchParams);
+        } else {
+            // Если нет параметров, показываем все объявления
+            loadAllOrders(1);
+        }
     }, [location.search]);
 
-    const performSearch = async (page = 1, animalTypeParam = null, districtParam = null) => {
+    // Debounce поиск для подсказок
+    useEffect(() => {
+        if (searchQuery.length > 3) {
+            const timer = setTimeout(async () => {
+                try {
+                    const response = await ApiService.searchPets(searchQuery, 1000);
+                    if (response && response.data && response.data.orders) {
+                        setSearchSuggestions(response.data.orders.slice(0, 5));
+                    }
+                } catch (error) {
+                    console.error('Ошибка при поиске:', error);
+                    setSearchSuggestions([]);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        } else {
+            setSearchSuggestions([]);
+        }
+    }, [searchQuery]);
+
+    // Загрузка всех объявлений
+    const loadAllOrders = async (page) => {
+        setLoading(true);
+        try {
+            const response = await ApiService.searchOrders({});
+            if (response && response.data && response.data.orders) {
+                const allResults = response.data.orders;
+                
+                // Пагинация на клиенте
+                const startIndex = (page - 1) * pageSize;
+                const endIndex = startIndex + pageSize;
+                const paginatedResults = allResults.slice(startIndex, endIndex);
+
+                setResults(paginatedResults);
+                setTotalCount(allResults.length);
+                setTotalPages(Math.ceil(allResults.length / pageSize));
+            } else {
+                setResults([]);
+                setTotalCount(0);
+                setTotalPages(0);
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке объявлений:', error);
+            setResults([]);
+            setTotalCount(0);
+            setTotalPages(0);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Поиск с параметрами
+    const performSearch = async (page, params = searchParams) => {
         setLoading(true);
         setCurrentPage(page);
 
-        // Используем переданные параметры или текущие из состояния
-        const animalTypeToSearch = animalTypeParam !== null ? animalTypeParam : searchParams.animalType;
-        const districtToSearch = districtParam !== null ? districtParam : searchParams.district;
-
-        // Имитация задержки API
-        setTimeout(() => {
-            let filteredAds = allAds;
-
-            // Применяем фильтры
-            if (districtToSearch) {
-                filteredAds = filteredAds.filter(ad => ad.district === districtToSearch);
+        try {
+            // Проверяем, что хотя бы один параметр есть
+            if (!params.animalType && !params.district) {
+                await loadAllOrders(page);
+                return;
             }
 
-            if (animalTypeToSearch) {
-                filteredAds = filteredAds.filter(ad => 
-                    ad.animalType.toLowerCase().includes(animalTypeToSearch.toLowerCase()) ||
-                    ad.title.toLowerCase().includes(animalTypeToSearch.toLowerCase()) ||
-                    ad.description.toLowerCase().includes(animalTypeToSearch.toLowerCase())
-                );
+            const response = await ApiService.searchOrders(params);
+            
+            if (response && response.data && response.data.orders) {
+                const allResults = response.data.orders;
+                
+                // Пагинация на клиенте
+                const startIndex = (page - 1) * pageSize;
+                const endIndex = startIndex + pageSize;
+                const paginatedResults = allResults.slice(startIndex, endIndex);
+
+                setResults(paginatedResults);
+                setTotalCount(allResults.length);
+                setTotalPages(Math.ceil(allResults.length / pageSize));
+            } else {
+                setResults([]);
+                setTotalCount(0);
+                setTotalPages(0);
             }
-
-            // Пагинация
-            const startIndex = (page - 1) * pageSize;
-            const endIndex = startIndex + pageSize;
-            const paginatedAds = filteredAds.slice(startIndex, endIndex);
-
-            setResults(paginatedAds);
-            setTotalCount(filteredAds.length);
+        } catch (error) {
+            console.error('Ошибка при поиске:', error);
+            setResults([]);
+            setTotalCount(0);
+            setTotalPages(0);
+        } finally {
             setLoading(false);
-        }, 500);
+        }
     };
 
     const handleSearch = (e) => {
@@ -298,117 +173,229 @@ const SearchPage = () => {
         if (searchParams.district) params.append('district', searchParams.district);
         
         // Обновляем URL без перезагрузки страницы
-        window.history.pushState({}, '', `${location.pathname}?${params.toString()}`);
+        navigate(`/search?${params.toString()}`);
         
-        performSearch(1, searchParams.animalType, searchParams.district);
+        performSearch(1, searchParams);
     };
 
     const handleReset = () => {
         setSearchParams({ district: '', animalType: '' });
+        setSearchQuery('');
         setCurrentPage(1);
         
         // Очищаем query-параметры в URL
-        window.history.pushState({}, '', location.pathname);
+        navigate('/search');
         
-        performSearch(1, '', '');
+        loadAllOrders(1);
     };
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        performSearch(page);
+        
+        if (searchParams.animalType || searchParams.district) {
+            performSearch(page, searchParams);
+        } else {
+            loadAllOrders(page);
+        }
     };
 
-    const totalPages = Math.ceil(totalCount / pageSize);
+    const handleSearchInputChange = (value) => {
+        setSearchQuery(value);
+        setSearchParams(prev => ({ ...prev, animalType: value }));
+    };
+
+    const getStatusBadge = (registered) => {
+        return registered ? 'bg-success' : 'bg-secondary';
+    };
+
+    const renderPagination = () => {
+        if (totalPages <= 1) return null;
+
+        const pages = [];
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        // Кнопка "Первая"
+        if (startPage > 1) {
+            pages.push(
+                <li key="first" className="page-item">
+                    <button className="page-link" onClick={() => handlePageChange(1)}>
+                        1
+                    </button>
+                </li>
+            );
+            if (startPage > 2) {
+                pages.push(
+                    <li key="dots1" className="page-item disabled">
+                        <span className="page-link">...</span>
+                    </li>
+                );
+            }
+        }
+
+        // Нумерация страниц
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <li key={i} className={`page-item ${i === currentPage ? 'active' : ''}`}>
+                    <button className="page-link" onClick={() => handlePageChange(i)}>
+                        {i}
+                    </button>
+                </li>
+            );
+        }
+
+        // Кнопка "Последняя"
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                pages.push(
+                    <li key="dots2" className="page-item disabled">
+                        <span className="page-link">...</span>
+                    </li>
+                );
+            }
+            pages.push(
+                <li key="last" className="page-item">
+                    <button className="page-link" onClick={() => handlePageChange(totalPages)}>
+                        {totalPages}
+                    </button>
+                </li>
+            );
+        }
+
+        return (
+            <nav aria-label="Page navigation" className="mt-4">
+                <ul className="pagination justify-content-center">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button 
+                            className="page-link" 
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            &laquo;
+                        </button>
+                    </li>
+                    {pages}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button 
+                            className="page-link" 
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            &raquo;
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        );
+    };
 
     return (
         <div>
             <Header isAuthenticated={false} />
             
-            <SearchHeader />
+            <SearchHeader 
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchInputChange}
+                suggestions={searchSuggestions}
+            />
             
-            <div className="container">
+            <div className="container mt-4">
                 {/* Расширенный поиск */}
-                <div className="search-filters">
-                    <h4 className="mb-3">Расширенный поиск</h4>
-                    <form id="advancedSearchForm" onSubmit={handleSearch}>
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <label htmlFor="districtSearch" className="form-label fw-bold">Район Санкт-Петербурга</label>
-                                <select 
-                                    className="form-select" 
-                                    id="districtSearch"
-                                    value={searchParams.district}
-                                    onChange={(e) => setSearchParams({...searchParams, district: e.target.value})}
-                                >
-                                    <option value="">Все районы</option>
-                                    <option value="Адмиралтейский район">Адмиралтейский район</option>
-                                    <option value="Василеостровский район">Василеостровский район</option>
-                                    <option value="Выборгский район">Выборгский район</option>
-                                    <option value="Калининский район">Калининский район</option>
-                                    <option value="Кировский район">Кировский район</option>
-                                    <option value="Колпинский район">Колпинский район</option>
-                                    <option value="Красногвардейский район">Красногвардейский район</option>
-                                    <option value="Красносельский район">Красносельский район</option>
-                                    <option value="Кронштадтский район">Кронштадтский район</option>
-                                    <option value="Курортный район">Курортный район</option>
-                                    <option value="Московский район">Московский район</option>
-                                    <option value="Невский район">Невский район</option>
-                                    <option value="Петроградский район">Петроградский район</option>
-                                    <option value="Петродворцовый район">Петродворцовый район</option>
-                                    <option value="Приморский район">Приморский район</option>
-                                    <option value="Пушкинский район">Пушкинский район</option>
-                                    <option value="Фрунзенский район">Фрунзенский район</option>
-                                    <option value="Центральный район">Центральный район</option>
-                                </select>
-                                <div className="form-text">Поиск по полному соответствию района</div>
+                <div className="search-filters card mb-4">
+                    <div className="card-body">
+                        <h4 className="mb-3">Расширенный поиск</h4>
+                        <form id="advancedSearchForm" onSubmit={handleSearch}>
+                            <div className="row">
+                                <div className="col-md-6 mb-3">
+                                    <label htmlFor="districtSearch" className="form-label fw-bold">Район Санкт-Петербурга</label>
+                                    <select 
+                                        className="form-select" 
+                                        id="districtSearch"
+                                        value={searchParams.district}
+                                        onChange={(e) => setSearchParams({...searchParams, district: e.target.value})}
+                                    >
+                                        <option value="">Все районы</option>
+                                        {districts.map((district, index) => (
+                                            <option key={index} value={district}>
+                                                {district}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="form-text">Поиск по полному соответствию района</div>
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label htmlFor="animalTypeSearch" className="form-label fw-bold">Вид животного</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-control" 
+                                        id="animalTypeSearch" 
+                                        placeholder="Например: кошка, собака, попугай"
+                                        value={searchParams.animalType}
+                                        onChange={(e) => {
+                                            setSearchParams({...searchParams, animalType: e.target.value});
+                                            setSearchQuery(e.target.value);
+                                        }}
+                                    />
+                                    <div className="form-text">Поиск по частичному соответствию</div>
+                                </div>
                             </div>
-                            <div className="col-md-6 mb-3">
-                                <label htmlFor="animalTypeSearch" className="form-label fw-bold">Вид животного</label>
-                                <input 
-                                    type="text" 
-                                    className="form-control" 
-                                    id="animalTypeSearch" 
-                                    placeholder="Например: кошка, собака, попугай"
-                                    value={searchParams.animalType}
-                                    onChange={(e) => setSearchParams({...searchParams, animalType: e.target.value})}
-                                />
-                                <div className="form-text">Поиск по частичному соответствию</div>
+                            <div className="d-flex gap-2">
+                                <button type="submit" className="btn btn-search" disabled={loading}>
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            Поиск...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-search me-1"></i>Найти объявления
+                                        </>
+                                    )}
+                                </button>
+                                <button type="button" className="btn btn-outline-secondary" onClick={handleReset} disabled={loading}>
+                                    <i className="bi bi-arrow-clockwise me-1"></i>Сбросить
+                                </button>
                             </div>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Статистика результатов */}
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h4>
+                        Найдено объявлений: 
+                        <span className="text-primary ms-2">{totalCount}</span>
+                    </h4>
+                    {totalPages > 0 && (
+                        <div className="text-muted">
+                            Страница {currentPage} из {totalPages}
                         </div>
-                        <div className="d-flex gap-2">
-                            <button type="submit" className="btn btn-search">
-                                <i className="bi bi-search me-1"></i>Найти объявления
-                            </button>
-                            <button type="button" className="btn btn-outline-secondary" onClick={handleReset}>
-                                <i className="bi bi-arrow-clockwise me-1"></i>Сбросить
-                            </button>
-                        </div>
-                    </form>
+                    )}
                 </div>
 
                 {/* Спиннер загрузки */}
                 {loading && (
-                    <div className="loading-spinner">
-                        <div className="spinner-border text-primary" role="status">
+                    <div className="loading-spinner text-center py-5">
+                        <div className="spinner-border text-primary" role="status" style={{width: '3rem', height: '3rem'}}>
                             <span className="visually-hidden">Загрузка...</span>
                         </div>
-                        <p className="mt-2">Загрузка объявлений...</p>
+                        <p className="mt-3">Загрузка объявлений...</p>
                     </div>
                 )}
-
-                {/* Статистика результатов */}
-                <div className="d-flex justify-content-between align-items-center mb-2 mt-4">
-                    <h4>Найдено объявлений: <span className="text-primary">{totalCount}</span></h4>
-                </div>
 
                 {/* Результаты поиска */}
                 {!loading && (
                     <>
                         {results.length === 0 ? (
-                            <div className="no-results">
-                                <i className="bi bi-search" style={{fontSize: '4rem'}}></i>
+                            <div className="no-results text-center py-5">
+                                <i className="bi bi-search" style={{fontSize: '4rem', color: '#6c757d'}}></i>
                                 <h4 className="mt-3">Ничего не найдено</h4>
-                                <p className="text-muted">Попробуйте изменить поисковый запрос</p>
+                                <p className="text-muted">Попробуйте изменить параметры поиска</p>
                                 <button className="btn btn-primary mt-2" onClick={handleReset}>
                                     <i className="bi bi-arrow-clockwise me-1"></i>Показать все объявления
                                 </button>
@@ -419,18 +406,43 @@ const SearchPage = () => {
                                     {results.map(ad => (
                                         <div key={ad.id} className="col-md-3 mb-4">
                                             <div className="card h-100">
-                                                <img src={ad.image} className="card-img-top" alt={ad.title}/>
-                                                <div className="card-body">
-                                                    <h5 className="card-title">{ad.title}</h5>
-                                                    <p className="card-text">{ad.description}</p>
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        <span className="badge district-badge">{ad.district}</span>
-                                                        <span className={`badge ${ad.badge}`}>{ad.status}</span>
+                                                <img 
+                                                    src={ad.photo || ad.photos || placeholderImage} 
+                                                    className="card-img-top" 
+                                                    alt={ad.kind}
+                                                    style={{ height: '200px', objectFit: 'cover' }}
+                                                    onError={(e) => {
+                                                        e.target.src = placeholderImage;
+                                                        e.target.style.objectFit = 'contain';
+                                                    }}
+                                                />
+                                                <div className="card-body d-flex flex-column">
+                                                    <h5 className="card-title">{ad.kind}</h5>
+                                                    <p className="card-text flex-grow-1">
+                                                        {ad.description && ad.description.length > 100 
+                                                            ? `${ad.description.substring(0, 100)}...`
+                                                            : ad.description}
+                                                    </p>
+                                                    <div className="mt-auto">
+                                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                                            <span className="badge district-badge">{ad.district}</span>
+                                                            <span className={`badge ${getStatusBadge(ad.registered)}`}>
+                                                                {ad.registered ? 'Зарегистрировано' : 'Не зарегистрировано'}
+                                                            </span>
+                                                        </div>
+                                                        {ad.mark && (
+                                                            <div className="mb-2">
+                                                                <small className="text-muted">Клеймо: {ad.mark}</small>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="card-footer">
                                                     <small className="text-muted">{ad.date}</small>
-                                                    <button className="btn btn-outline-primary btn-sm float-end">
+                                                    <button 
+                                                        className="btn btn-outline-primary btn-sm float-end"
+                                                        onClick={() => navigate(`/pet/${ad.id}`)}
+                                                    >
                                                         Подробнее
                                                     </button>
                                                 </div>
@@ -440,29 +452,7 @@ const SearchPage = () => {
                                 </div>
 
                                 {/* Пагинация */}
-                                {totalPages > 1 && (
-                                    <nav aria-label="Page navigation" className="mt-4">
-                                        <ul className="pagination justify-content-center">
-                                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                                <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
-                                                    &laquo;
-                                                </button>
-                                            </li>
-                                            {[...Array(totalPages)].map((_, i) => (
-                                                <li key={i} className={`page-item ${i + 1 === currentPage ? 'active' : ''}`}>
-                                                    <button className="page-link" onClick={() => handlePageChange(i + 1)}>
-                                                        {i + 1}
-                                                    </button>
-                                                </li>
-                                            ))}
-                                            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                                <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
-                                                    &raquo;
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                )}
+                                {renderPagination()}
                             </>
                         )}
                     </>

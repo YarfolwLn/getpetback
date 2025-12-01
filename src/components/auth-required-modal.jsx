@@ -1,7 +1,7 @@
 import React from 'react';
 
 const AuthRequiredModal = () => {
-    return(
+    return (
         <div className="modal fade" id="authRequiredModal" tabIndex="-1" aria-hidden="true">
             <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content">
@@ -25,7 +25,7 @@ const AuthRequiredModal = () => {
                 </div>
             </div>
         </div>
-    )
+    );
 };
 
 export default AuthRequiredModal;

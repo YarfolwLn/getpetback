@@ -592,4 +592,161 @@
 .form-select:focus {
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
 }
+.square-slider-image {
+    width: 300px;
+    height: 300px;
+    object-fit: contain; /* Показывает все изображение без обрезки */
+    border-radius: 8px; /* Опционально: скругленные углы */
+}
 
+.square-placeholder {
+    width: 300px;
+    height: 300px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dee2e6;
+}
+
+/* src/App.css - дополнения */
+
+/* Стили для уведомлений */
+.alert-fixed-top {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1060;
+    min-width: 400px;
+    max-width: 90%;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Стили для карточек животных */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Стили для статусов объявлений */
+.badge-status-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-status-wasFound {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-status-onModeration {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-status-archive {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Стили для подсказок поиска */
+.suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-text {
+    flex: 1;
+}
+
+.suggestion-meta {
+    margin-left: 10px;
+}
+
+/* Стили для изображений */
+.preview-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Стили для форм */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-valid {
+    border-color: #198754;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .alert-fixed-top {
+        min-width: 300px;
+        max-width: 95%;
+    }
+    
+    .carousel-content {
+        padding: 20px 0;
+        text-align: center;
+    }
+    
+    .suggestions-dropdown {
+        position: fixed;
+        top: auto;
+        left: 10px;
+        right: 10px;
+        max-height: 200px;
+    }
+}
