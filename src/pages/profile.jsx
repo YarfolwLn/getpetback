@@ -1,3 +1,4 @@
+// profile.jsx (обновленная версия)
 import React, { useState } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
@@ -5,6 +6,8 @@ import ProfileStats from '../components/profile-stats';
 import UserAds from '../components/user-ads';
 import LogoutModal from '../components/logout-modal';
 import AuthRequiredModal from '../components/auth-required-modal';
+import belkaImage from '../assets/images/belka.jpg';
+import catImage from '../assets/images/cat.jpg';
 
 const Profile = () => {
     const [activeTab, setActiveTab] = useState('ads');
@@ -20,12 +23,12 @@ const Profile = () => {
         email: 'ivan.petrov@example.com'
     });
 
-    const userAds = [
+    const [userAds, setUserAds] = useState([
         {
             id: 1,
             title: "Найдена кошка",
             description: "Найдена кошка, порода Сфинкс, очень грустная",
-            image: "images/cat.jpg",
+            image: catImage,
             district: "Василеостровский район",
             date: "12.01.2024",
             status: "active",
@@ -36,24 +39,46 @@ const Profile = () => {
             id: 2,
             title: "Пропала белка",
             description: "Домашняя белка пропала из вольера. Откликается на кличку 'Пуша'.",
-            image: "images/belka.jpg",
+            image: belkaImage,
             district: "Петроградский район",
             date: "05.01.2024",
             status: "wasFound",
             statusText: "Хозяин найден",
             mark: "BL-0156"
         }
-    ];
+    ]);
+
+    const handleAdUpdate = (adId, updatedData) => {
+        // Обновляем объявление в состоянии
+        const updatedAds = userAds.map(ad => {
+            if (ad.id === adId) {
+                return {
+                    ...ad,
+                    mark: updatedData.mark,
+                    description: updatedData.description
+                };
+            }
+            return ad;
+        });
+        
+        setUserAds(updatedAds);
+        console.log('Объявление обновлено:', adId, updatedData);
+    };
+
+    const handleAdDelete = (adId) => {
+        // Удаляем объявление из состояния
+        const updatedAds = userAds.filter(ad => ad.id !== adId);
+        setUserAds(updatedAds);
+        console.log('Объявление удалено:', adId);
+    };
 
     const handleContactSubmit = (e) => {
         e.preventDefault();
-        // Логика сохранения контактных данных
         console.log('Сохранение контактных данных:', contactData);
     };
 
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
-        // Логика смены пароля
         console.log('Смена пароля');
     };
 
@@ -113,7 +138,11 @@ const Profile = () => {
                         <div className="tab-content">
                             {/* Вкладка "Мои объявления" */}
                             {activeTab === 'ads' && (
-                                <UserAds ads={userAds} />
+                                <UserAds 
+                                    ads={userAds} 
+                                    onAdUpdate={handleAdUpdate}
+                                    onAdDelete={handleAdDelete}
+                                />
                             )}
 
                             {/* Вкладка "Настройки" */}
@@ -196,9 +225,6 @@ const Profile = () => {
                                                     <button type="submit" className="btn btn-primary">
                                                         <i className="bi bi-check-lg me-1"></i>Сохранить изменения
                                                     </button>
-                                                    <button type="reset" className="btn btn-outline-secondary">
-                                                        <i className="bi bi-arrow-clockwise me-1"></i>Отменить
-                                                    </button>
                                                 </div>
                                             </form>
                                         </div>
@@ -236,7 +262,7 @@ const Profile = () => {
                                                     <div className="form-text">Пароль должен содержать не менее 6 символов</div>
                                                 </div>
                                                 <div className="mb-3">
-                                                    <label htmlFor="confirmPassword" className="form-label">Подтверждение пароля</label>
+                                                    <label htmlFor="confirmPassword" className="form-label">Введите старый пароль</label>
                                                     <input 
                                                         type="password" 
                                                         className="form-control" 

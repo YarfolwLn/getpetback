@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import SearchHeader from '../components/search-header';
+import belkaImage from '../assets/images/belka.jpg';
+import catImage from '../assets/images/cat.jpg';
+import ezhImage from '../assets/images/ezh.jpg';
+import tigerImage from '../assets/images/tiger.jpg';
+import dogImage from '../assets/images/dog.jpg';
+import parrotImage from '../assets/images/parrot.jpg';
 
 const SearchPage = () => {
+    const location = useLocation();
     const [searchParams, setSearchParams] = useState({
         district: '',
         animalType: ''
@@ -19,7 +27,7 @@ const SearchPage = () => {
             id: 1,
             title: "Найдена кошка",
             description: "Пушистая кошка найдена в центре города. Ищет хозяев. Приучена к лотку, очень ласковая.",
-            image: "images/cat.jpg",
+            image: catImage,
             district: "Центральный район",
             animalType: "кошка",
             date: "12.01.2024",
@@ -30,7 +38,7 @@ const SearchPage = () => {
             id: 2,
             title: "Найдена белка",
             description: "Милая белочка ищет новый дом. Очень активная и дружелюбная.",
-            image: "images/belka.jpg",
+            image: belkaImage,
             district: "Петроградский район",
             animalType: "белка",
             date: "15.01.2024",
@@ -43,7 +51,7 @@ const SearchPage = () => {
             id: 3,
             title: "Найден ёж",
             description: "Колючий ёжик найден в парке. Требуется специальный уход. Очень добрый, несмотря на колючки.",
-            image: "images/ezh.jpg",
+            image: ezhImage,
             district: "Невский район",
             animalType: "ёж",
             date: "08.01.2024",
@@ -56,7 +64,7 @@ const SearchPage = () => {
             id: 4,
             title: "Найден тигрёнок",
             description: "Маленький тигрёнок найден в пригороде. Требуется специализированный уход и содержание.",
-            image: "images/tiger.jpg",
+            image: tigerImage,
             district: "Приморский район",
             animalType: "тигр",
             date: "15.01.2024",
@@ -69,7 +77,7 @@ const SearchPage = () => {
             id: 5,
             title: "Пропала собака",
             description: "Пропала собака породы хаски. Кобель, 2 года. Откликнется на кличку Рекс. Носит синий ошейник.",
-            image: "images/dog.jpg",
+            image: dogImage,
             district: "Выборгский район",
             animalType: "собака",
             date: "10.01.2024",
@@ -82,7 +90,7 @@ const SearchPage = () => {
             id: 6,
             title: "Найден попугай",
             description: "Найден волнистый попугай голубого окраса. Ищет хозяев. Умеет говорить несколько слов.",
-            image: "images/parrot.jpg",
+            image: parrotImage,
             district: "Фрунзенский район",
             animalType: "попугай",
             date: "07.01.2024",
@@ -223,24 +231,50 @@ const SearchPage = () => {
         }
     ];
 
-    const performSearch = async (page = 1, isPaginationClick = false) => {
+    // Функция для получения параметров из URL
+    const getQueryParams = () => {
+        const params = new URLSearchParams(location.search);
+        return {
+            animalType: params.get('animalType') || '',
+            district: params.get('district') || ''
+        };
+    };
+
+    // При изменении URL (например, при переходе с главной страницы)
+    useEffect(() => {
+        const queryParams = getQueryParams();
+        setSearchParams(prev => ({
+            ...prev,
+            animalType: queryParams.animalType,
+            district: queryParams.district
+        }));
+        
+        // Запускаем поиск с учетом параметров из URL
+        performSearch(1, queryParams.animalType, queryParams.district);
+    }, [location.search]);
+
+    const performSearch = async (page = 1, animalTypeParam = null, districtParam = null) => {
         setLoading(true);
         setCurrentPage(page);
+
+        // Используем переданные параметры или текущие из состояния
+        const animalTypeToSearch = animalTypeParam !== null ? animalTypeParam : searchParams.animalType;
+        const districtToSearch = districtParam !== null ? districtParam : searchParams.district;
 
         // Имитация задержки API
         setTimeout(() => {
             let filteredAds = allAds;
 
             // Применяем фильтры
-            if (searchParams.district) {
-                filteredAds = filteredAds.filter(ad => ad.district === searchParams.district);
+            if (districtToSearch) {
+                filteredAds = filteredAds.filter(ad => ad.district === districtToSearch);
             }
 
-            if (searchParams.animalType) {
+            if (animalTypeToSearch) {
                 filteredAds = filteredAds.filter(ad => 
-                    ad.animalType.toLowerCase().includes(searchParams.animalType.toLowerCase()) ||
-                    ad.title.toLowerCase().includes(searchParams.animalType.toLowerCase()) ||
-                    ad.description.toLowerCase().includes(searchParams.animalType.toLowerCase())
+                    ad.animalType.toLowerCase().includes(animalTypeToSearch.toLowerCase()) ||
+                    ad.title.toLowerCase().includes(animalTypeToSearch.toLowerCase()) ||
+                    ad.description.toLowerCase().includes(animalTypeToSearch.toLowerCase())
                 );
             }
 
@@ -255,24 +289,33 @@ const SearchPage = () => {
         }, 500);
     };
 
-    useEffect(() => {
-        performSearch(1);
-    }, []);
-
     const handleSearch = (e) => {
         e.preventDefault();
-        performSearch(1);
+        
+        // Обновляем URL с новыми параметрами поиска
+        const params = new URLSearchParams();
+        if (searchParams.animalType) params.append('animalType', searchParams.animalType);
+        if (searchParams.district) params.append('district', searchParams.district);
+        
+        // Обновляем URL без перезагрузки страницы
+        window.history.pushState({}, '', `${location.pathname}?${params.toString()}`);
+        
+        performSearch(1, searchParams.animalType, searchParams.district);
     };
 
     const handleReset = () => {
         setSearchParams({ district: '', animalType: '' });
         setCurrentPage(1);
-        performSearch(1);
+        
+        // Очищаем query-параметры в URL
+        window.history.pushState({}, '', location.pathname);
+        
+        performSearch(1, '', '');
     };
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        performSearch(page, true);
+        performSearch(page);
     };
 
     const totalPages = Math.ceil(totalCount / pageSize);

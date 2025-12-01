@@ -1,11 +1,39 @@
-import React from 'react';
+// user-ads.jsx (обновленная версия)
+import React, { useState } from 'react';
+import EditAdModal from '../components/edit-ad-modal';
+import DeleteAdModal from '../components/delete-ad-modal';
 
-const UserAds = ({ ads }) => {
-    return(
+const UserAds = ({ ads, onAdUpdate, onAdDelete }) => {
+    const [editingAd, setEditingAd] = useState(null);
+    const [deletingAd, setDeletingAd] = useState(null);
+
+    const handleEditClick = (ad) => {
+        setEditingAd(ad);
+    };
+
+    const handleDeleteClick = (ad) => {
+        setDeletingAd(ad);
+    };
+
+    const handleSaveEdit = (updatedData) => {
+        if (editingAd && onAdUpdate) {
+            onAdUpdate(editingAd.id, updatedData);
+        }
+        setEditingAd(null);
+    };
+
+    const handleConfirmDelete = (adId) => {
+        if (onAdDelete) {
+            onAdDelete(adId);
+        }
+        setDeletingAd(null);
+    };
+
+    return (
         <section className="tab-pane fade show active" id="ads" role="tabpanel" aria-labelledby="ads-tab">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3>Мои объявления</h3>
-                <a href="/add-ad" className="btn btn-primary">
+                <a href="/add" className="btn btn-primary">
                     <i className="bi bi-plus-circle me-1"></i>Добавить объявление
                 </a>
             </div>
@@ -23,7 +51,6 @@ const UserAds = ({ ads }) => {
                                     <span className={`badge badge-status-${ad.status}`}>{ad.statusText}</span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <small className="text-muted">ID: {ad.id}</small>
                                     <small className="text-muted">{ad.date}</small>
                                 </div>
                                 <div className="mt-2">
@@ -32,11 +59,17 @@ const UserAds = ({ ads }) => {
                             </div>
                             <div className="card-footer">
                                 <div className="btn-group w-100">
-                                    <button className="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target={`#editAdModal${ad.id}`}>
+                                    <button 
+                                        className="btn btn-outline-primary btn-sm"
+                                        onClick={() => handleEditClick(ad)}
+                                    >
                                         <i className="bi bi-pencil"></i>
                                         <span className="visually-hidden">Редактировать объявление</span>
                                     </button>
-                                    <button className="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target={`#deleteAdModal${ad.id}`}>
+                                    <button 
+                                        className="btn btn-outline-danger btn-sm"
+                                        onClick={() => handleDeleteClick(ad)}
+                                    >
                                         <i className="bi bi-trash"></i>
                                         <span className="visually-hidden">Удалить объявление</span>
                                     </button>
@@ -45,9 +78,29 @@ const UserAds = ({ ads }) => {
                         </div>
                     </article>
                 ))}
-            </div>  
+            </div>
+
+            {/* Модальное окно редактирования */}
+            {editingAd && (
+                <EditAdModal
+                    ad={editingAd}
+                    show={!!editingAd}
+                    onClose={() => setEditingAd(null)}
+                    onSave={handleSaveEdit}
+                />
+            )}
+
+            {/* Модальное окно удаления */}
+            {deletingAd && (
+                <DeleteAdModal
+                    ad={deletingAd}
+                    show={!!deletingAd}
+                    onClose={() => setDeletingAd(null)}
+                    onDelete={handleConfirmDelete}
+                />
+            )}
         </section>
-    )
+    );
 };
 
 export default UserAds;

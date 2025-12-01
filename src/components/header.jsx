@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from './images/logo.jpg';
+import logo from '../assets/images/logo.jpg';
 
 const Header = ({ isAuthenticated = false, userName = "Иван" }) => {
     return (
@@ -20,10 +20,10 @@ const Header = ({ isAuthenticated = false, userName = "Иван" }) => {
                             <a className="nav-link" href="/register">Регистрация/Вход</a>
                         </li>
                         <li className="nav-item">
-                            <a className="nav-link" href="/addob">Добавить объявление</a>
+                            <a className="nav-link" href="/add">Добавить объявление</a>
                         </li>
                         <li className="nav-item">
-                            <a className="nav-link" href="/searchob">Поиск по объявлениям</a>
+                            <a className="nav-link" href="/search">Поиск по объявлениям</a>
                         </li>
                     </ul>
                     

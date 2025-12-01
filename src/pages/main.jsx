@@ -6,6 +6,12 @@ import NewsletterSection from '../components/newsletter-section';
 import PetCard from '../components/pet-card';
 import PetModal from '../components/pet-modal';
 import SearchHeader from '../components/search-header';
+import belkaImage from '../assets/images/belka.jpg';
+import catImage from '../assets/images/cat.jpg';
+import ezhImage from '../assets/images/ezh.jpg';
+import tigerImage from '../assets/images/tiger.jpg';
+import dogImage from '../assets/images/dog.jpg';
+import parrotImage from '../assets/images/parrot.jpg';
 
 const Main = () => {
     const pets = [
@@ -13,7 +19,7 @@ const Main = () => {
             id: 1,
             title: "Найдена белка",
             description: "Милая белочка ищет новый дом. Очень активная и дружелюбная.",
-            image: "images/belka.jpg",
+            image: belkaImage,
             district: "Петроградский район",
             date: "15.01.2024",
             contact: "+7 (911) 234-56-79",
@@ -26,7 +32,7 @@ const Main = () => {
             id: 2,
             title: "Найдена кошка",
             description: "Пушистая кошка ищет заботливых хозяев. Приучена к лотку.",
-            image: "images/cat.jpg",
+            image: catImage,
             district: "Василеостровский район",
             date: "12.01.2024",
             contact: "+7 (911) 234-56-78",
@@ -39,7 +45,7 @@ const Main = () => {
             id: 3,
             title: "Найден ёж",
             description: "Колючий ёжик ищет новый дом. Требуется специальный уход.",
-            image: "images/ezh.jpg",
+            image: ezhImage,
             district: "Невский район",
             date: "08.01.2024",
             contact: "+7 (911) 234-56-80",
@@ -52,7 +58,7 @@ const Main = () => {
             id: 4,
             title: "Найден тигрёнок",
             description: "Маленький тигрёнок найден в пригороде. Требуется специализированный уход.",
-            image: "images/tiger.jpg",
+            image: tigerImage,
             district: "Приморский район",
             date: "15.01.2024",
             contact: "+7 (911) 234-56-81",
@@ -65,7 +71,7 @@ const Main = () => {
             id: 5,
             title: "Пропала собака",
             description: "Пропала собака породы хаски. Кобель, 2 года. Откликнется на кличку Рекс.",
-            image: "images/dog.jpg",
+            image: dogImage,
             district: "Выборгский район",
             date: "10.01.2024",
             contact: "+7 (911) 234-56-82",
@@ -78,7 +84,7 @@ const Main = () => {
             id: 6,
             title: "Найден попугай",
             description: "Найден волнистый попугай голубого окраса. Ищет хозяев.",
-            image: "images/parrot.jpg",
+            image: parrotImage,
             district: "Фрунзенский район",
             date: "07.01.2024",
             contact: "+7 (911) 234-56-83",
@@ -118,7 +124,7 @@ const Main = () => {
                             <div className="row align-items-center">
                                 <div className="col-md-6">
                                     <div className="carousel-image-container">
-                                        <img src="images/belka.jpg" className="d-block w-100" alt="Белка"/>
+                                        <img src={belkaImage} className="d-block w-100" alt="Белка"/>
                                     </div>
                                 </div>
                                 <div className="col-md-6">
@@ -133,7 +139,7 @@ const Main = () => {
                             <div className="row align-items-center">
                                 <div className="col-md-6">
                                     <div className="carousel-image-container">
-                                        <img src="images/cat.jpg" className="d-block w-100" alt="Кошка"/>
+                                        <img src={catImage} className="d-block w-100" alt="Кошка"/>
                                     </div>
                                 </div>
                                 <div className="col-md-6">
@@ -148,7 +154,7 @@ const Main = () => {
                             <div className="row align-items-center">
                                 <div className="col-md-6">
                                     <div className="carousel-image-container">
-                                        <img src="images/ezh.jpg" className="d-block w-100" alt="Ёж"/>
+                                        <img src={ezhImage} className="d-block w-100" alt="Ёж"/>
                                     </div>
                                 </div>
                                 <div className="col-md-6">
@@ -163,7 +169,7 @@ const Main = () => {
                             <div className="row align-items-center">
                                 <div className="col-md-6">
                                     <div className="carousel-image-container">
-                                        <img src="images/tiger.jpg" className="d-block w-100" alt="Тигр"/>
+                                        <img src={tigerImage} className="d-block w-100" alt="Тигр"/>
                                     </div>
                                 </div>
                                 <div className="col-md-6">

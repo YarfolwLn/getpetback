@@ -32,10 +32,10 @@ function App() {
             <div className="App">
                 <Routes>
                     <Route path="/" element={<Main />} />
-                    <Route path="/searchob" element={<SearchPage />} />
+                    <Route path="/search" element={<SearchPage />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/addob" element={<Addob />} />
+                    <Route path="/add" element={<Addob />} />
                 </Routes>
             </div>
         </Router>
