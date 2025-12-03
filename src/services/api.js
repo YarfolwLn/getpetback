@@ -8,25 +8,121 @@ class ApiService {
         this.searchTimeout = null;
     }
 
+    // Метод для поиска пользователя по email
+    async findUserByEmail(email) {
+        try {
+            // Получаем всех пользователей
+            const response = await this.request('/users');
+            console.log('Поиск пользователя по email:', email);
+
+            // Проверяем разные форматы ответа
+            let users = [];
+            if (Array.isArray(response)) {
+                users = response;
+            } else if (response && response.data && Array.isArray(response.data)) {
+                users = response.data;
+            } else if (response && Array.isArray(response.users)) {
+                users = response.users;
+            }
+
+            // Ищем пользователя по email
+            const user = users.find(u => u.email === email);
+            if (user) {
+                console.log('Пользователь найден:', user);
+                return user;
+            }
+
+            console.warn('Пользователь не найден');
+            return null;
+        } catch (error) {
+            console.error('Ошибка поиска пользователя по email:', error);
+            return null;
+        }
+    }
+
+    // Получение ID пользователя из токена
+    getUserIdFromToken() {
+        // Просто проверяем сохраненный ID
+        const savedUserId = localStorage.getItem('user_id');
+        if (savedUserId) {
+            return parseInt(savedUserId);
+        }
+        return null;
+    }
+
+    // Получение данных текущего пользователя
+    async getCurrentUser() {
+        console.log('Получение данных текущего пользователя через /users');
+        return this.request('/users');
+    }
+
+    // Получение объявлений текущего пользователя
+    async getCurrentUserOrders() {
+        console.log('Получение объявлений текущего пользователя через /users/orders');
+        const result = await this.request('/users/orders');
+        
+        // Преобразуем пути изображений
+        if (result && result.data && result.data.orders) {
+            result.data.orders = result.data.orders.map(order => ({
+                ...order,
+                photo: order.photo ? this.getImageUrl(order.photo) : null,
+                photos: order.photos ? this.getImageUrl(order.photos) : null
+            }));
+        } else if (Array.isArray(result)) {
+            // Если API возвращает напрямую массив
+            result = result.map(order => ({
+                ...order,
+                photo: order.photo ? this.getImageUrl(order.photo) : null,
+                photos: order.photos ? this.getImageUrl(order.photos) : null
+            }));
+        }
+        
+        return result;
+    }
+
     // Добавляем метод для получения полного URL изображения
     getImageUrl(imagePath) {
-        if (!imagePath) return null;
+        if (!imagePath) {
+            console.warn('Image path is null or undefined');
+            return null;
+        }
+        
         // Если URL уже полный, возвращаем как есть
         if (imagePath.startsWith('http')) {
             return imagePath;
         }
-        // Иначе добавляем базовый URL
-        return `${BASE_URL}${imagePath}`;
+        
+        // Очищаем путь от возможных проблем
+        const cleanPath = imagePath.trim();
+        
+        // Проверяем, что путь начинается со слеша
+        if (!cleanPath.startsWith('/')) {
+            console.warn('Image path does not start with /:', cleanPath);
+            return null;
+        }
+        
+        // Собираем полный URL
+        const fullUrl = `${BASE_URL}${cleanPath}`;
+        
+        return fullUrl;
     }
 
     setToken(token) {
+        console.log('setToken: установка токена', token ? 'есть' : 'нет');
         this.token = token;
-        localStorage.setItem('auth_token', token);
+        if (token) {
+            localStorage.setItem('auth_token', token);
+        } else {
+            localStorage.removeItem('auth_token');
+        }
     }
 
     clearToken() {
+        console.log('clearToken: очистка токена');
         this.token = null;
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('user_data');
     }
 
     getHeaders(isFormData = false) {
@@ -45,6 +141,8 @@ class ApiService {
 
     async request(endpoint, method = 'GET', data = null, isFormData = false) {
         const url = `${this.baseUrl}${endpoint}`;
+        console.log(`API ${method} ${url}`, data ? 'с данными' : 'без данных');
+        
         const options = {
             method,
             headers: this.getHeaders(isFormData),
@@ -67,8 +165,10 @@ class ApiService {
             }
 
             const responseData = await response.json();
+            console.log(`API ${method} ${url} ответ:`, responseData);
             
             if (!response.ok) {
+                console.error(`API Error ${response.status}:`, responseData);
                 throw {
                     status: response.status,
                     data: responseData
@@ -146,17 +246,50 @@ class ApiService {
 
     // Регистрация пользователя
     async register(userData) {
-        return this.request('/register', 'POST', {
+        console.log('Регистрация пользователя:', userData);
+        const result = await this.request('/register', 'POST', {
             ...userData,
             confirm: userData.confirm ? 1 : 0
         });
+
+        // Если при регистрации возвращается ID пользователя
+        if (result && result.id) {
+            localStorage.setItem('user_id', result.id.toString());
+            localStorage.setItem('user_data', JSON.stringify(result));
+        }
+
+        return result;
     }
 
     // Авторизация
     async login(email, password) {
+        console.log('Логин пользователя:', email);
         const result = await this.request('/login', 'POST', { email, password });
         if (result.data && result.data.token) {
             this.setToken(result.data.token);
+
+            // После успешного входа, попробуем найти пользователя по email
+            // Так как API не предоставляет /users/me, нужно искать другим способом
+            try {
+                // Запросим всех пользователей (если это возможно)
+                // или получим ID через другой endpoint
+                console.log('Пытаемся получить ID пользователя после входа');
+
+                // Если API позволяет поиск по email
+                const searchResult = await this.request(`/users?email=${encodeURIComponent(email)}`);
+
+                if (searchResult && searchResult.length > 0) {
+                    const user = searchResult[0];
+                    localStorage.setItem('user_data', JSON.stringify(user));
+                    localStorage.setItem('user_id', user.id.toString());
+                    console.log('Пользователь найден по email, ID:', user.id);
+                } else {
+                    console.warn('Пользователь не найден по email, нужно будет получить ID позже');
+                }
+            } catch (error) {
+                console.warn('Не удалось получить пользователя по email, возможно API не поддерживает поиск:', error);
+                // Продолжаем без данных пользователя - получим их позже на странице профиля
+            }
         }
         return result;
     }
@@ -204,19 +337,8 @@ class ApiService {
     }
 
     // Объявления пользователя
-    async getUserOrders(userId) {
-        const result = await this.request(`/users/orders/${userId}`);
-        
-        // Преобразуем пути изображений
-        if (result && result.data && result.data.orders) {
-            result.data.orders = result.data.orders.map(order => ({
-                ...order,
-                photo: order.photo ? this.getImageUrl(order.photo) : null,
-                photos: order.photos ? this.getImageUrl(order.photos) : null
-            }));
-        }
-        
-        return result;
+    async getUserOrders() {
+        return this.getCurrentUserOrders();
     }
 
     // Удаление объявления
@@ -251,21 +373,7 @@ class ApiService {
         return this.request('/pets', 'POST', formData, true);
     }
 
-    // Проверка токена
-    async verifyToken() {
-        if (!this.token) return false;
-        
-        try {
-            // Используем endpoint профиля для проверки
-            await this.request('/users/1'); // ID будет заменен на реальный
-            return true;
-        } catch (error) {
-            if (error.status === 401) {
-                this.clearToken();
-            }
-            return false;
-        }
-    }
+    
 }
 
 export default new ApiService();

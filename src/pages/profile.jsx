@@ -26,62 +26,122 @@ const Profile = () => {
 
     // Проверка авторизации и загрузка данных
     useEffect(() => {
+        console.log('=== PROFILE USEEFFECT START ===');
+        
+        const token = localStorage.getItem('auth_token');
+        console.log('Токен в localStorage:', token ? 'ЕСТЬ' : 'НЕТ');
+        
+        if (!token) {
+            console.log('Нет токена, редирект на /register');
+            navigate('/register');
+            return;
+        }
+    
         const loadProfileData = async () => {
             try {
                 setLoading(true);
+                console.log('=== ЗАГРУЗКА ПРОФИЛЯ ===');
                 
-                // Получаем ID пользователя из localStorage или токена
-                // В реальном приложении это должно извлекаться из декодированного токена
-                const userId = 1; // Замените на реальный ID пользователя
-                
-                const [profileResponse, adsResponse] = await Promise.all([
-                    ApiService.getUserProfile(userId),
-                    ApiService.getUserOrders(userId)
-                ]);
-
-                if (profileResponse && profileResponse.data && profileResponse.data.user) {
-                    const user = profileResponse.data.user[0];
-                    setUserData(user);
-                    
-                    // Расчет дней с регистрации
-                    if (user.registrationDate) {
-                        const regDate = new Date(user.registrationDate);
-                        const today = new Date();
-                        const diffTime = Math.abs(today - regDate);
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        user.daysSinceRegistration = diffDays;
-                    }
-                    
-                    setContactData({
-                        phone: user.phone || '',
-                        email: user.email || ''
-                    });
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    console.log('Нет токена, редирект на /register');
+                    navigate('/register');
+                    return;
                 }
-
+        
+                console.log('1. Запрашиваем данные пользователя через /users');
+                
+                // Получаем данные текущего пользователя
+                const userResponse = await ApiService.request('/users');
+                console.log('Ответ пользователя:', userResponse);
+        
+                // Обрабатываем данные пользователя
+                let userData = null;
+                
+                if (userResponse && userResponse.id) {
+                    // Формат: {id: 123, name: "Имя", email: "...", ...}
+                    userData = userResponse;
+                } else if (userResponse && userResponse.data && userResponse.data.id) {
+                    // Формат: {data: {id: 123, name: "Имя", ...}}
+                    userData = userResponse.data;
+                }
+        
+                if (!userData || !userData.id) {
+                    console.error('Не удалось получить данные пользователя');
+                    throw new Error('Не удалось получить данные пользователя');
+                }
+        
+                console.log('Данные пользователя получены:', userData);
+                
+                // Сохраняем ID пользователя в localStorage
+                localStorage.setItem('user_id', userData.id.toString());
+                localStorage.setItem('user_data', JSON.stringify(userData));
+                
+                // Расчет дней с регистрации
+                if (userData.registrationDate) {
+                    const regDate = new Date(userData.registrationDate);
+                    const today = new Date();
+                    const diffTime = Math.abs(today - regDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    userData.daysSinceRegistration = diffDays;
+                }
+                
+                // Устанавливаем данные пользователя
+                setUserData(userData);
+                setContactData({
+                    phone: userData.phone || '',
+                    email: userData.email || ''
+                });
+        
+                console.log('2. Запрашиваем объявления пользователя через /users/orders');
+                
+                // Получаем объявления пользователя (без ID в URL)
+                const adsResponse = await ApiService.getCurrentUserOrders();
+                console.log('Ответ объявлений:', adsResponse);
+        
+                // Обработка объявлений
                 if (adsResponse && adsResponse.data && adsResponse.data.orders) {
-                    // Добавляем текстовое представление статуса
+                    console.log('Объявлений получено:', adsResponse.data.orders.length);
                     const adsWithStatusText = adsResponse.data.orders.map(ad => ({
                         ...ad,
                         statusText: getStatusText(ad.status),
                         image: ad.photo || ad.photos || placeholderImage
                     }));
                     setUserAds(adsWithStatusText);
+                } else if (adsResponse && Array.isArray(adsResponse)) {
+                    // Если API возвращает напрямую массив объявлений
+                    console.log('Объявлений получено (прямой массив):', adsResponse.length);
+                    const adsWithStatusText = adsResponse.map(ad => ({
+                        ...ad,
+                        statusText: getStatusText(ad.status),
+                        image: ad.photo || ad.photos || placeholderImage
+                    }));
+                    setUserAds(adsWithStatusText);
+                } else {
+                    console.log('Нет объявлений у пользователя');
+                    setUserAds([]);
                 }
-
+        
+                console.log('=== ЗАГРУЗКА ПРОФИЛЯ ЗАВЕРШЕНА ===');
+        
             } catch (error) {
+                console.error('Ошибка загрузки профиля:', error);
+                
                 if (error.status === 401) {
-                    // Неавторизован
+                    console.log('Ошибка 401 - неавторизован, очищаем токен');
                     ApiService.clearToken();
                     navigate('/register');
+                } else if (error.status === 404) {
+                    console.log('Ошибка 404 - пользователь не найден');
+                    setError('Пользователь не найден');
                 } else {
-                    setError('Ошибка при загрузке данных профиля');
-                    console.error('Ошибка загрузки профиля:', error);
+                    setError('Ошибка при загрузке данных профиля: ' + (error.message || 'Неизвестная ошибка'));
                 }
             } finally {
                 setLoading(false);
             }
         };
-
+    
         loadProfileData();
     }, [navigate]);
 
@@ -173,7 +233,12 @@ const Profile = () => {
         setEditErrors({});
         
         try {
-            const userId = 1; // Замените на реальный ID пользователя
+            // Получаем ID пользователя из сохраненных данных
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                setError('Пользователь не авторизован');
+                return;
+            }
             
             // Обновляем телефон
             if (contactData.phone !== userData?.phone) {
@@ -239,6 +304,7 @@ const Profile = () => {
     };
 
     const handleLogout = () => {
+        console.log('Выход из профиля');
         ApiService.clearToken();
         navigate('/');
     };
@@ -252,6 +318,7 @@ const Profile = () => {
                         <span className="visually-hidden">Загрузка...</span>
                     </div>
                     <p className="mt-2">Загрузка профиля...</p>
+                    <p className="text-muted small">Проверяем авторизацию...</p>
                 </div>
             </div>
         );
@@ -264,6 +331,11 @@ const Profile = () => {
                 <div className="container py-5">
                     <div className="alert alert-danger" role="alert">
                         Не удалось загрузить данные профиля
+                    </div>
+                    <div className="text-center mt-3">
+                        <button className="btn btn-primary" onClick={() => navigate('/register')}>
+                            Вернуться на страницу входа
+                        </button>
                     </div>
                 </div>
             </div>

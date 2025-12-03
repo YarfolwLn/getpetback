@@ -110,23 +110,6 @@ const NewsletterSection = ({ onSubmit }) => {
                     </div>
                 </div>
             </div>
-            
-            <style jsx>{`
-                .btn-spinner {
-                    display: inline-block;
-                    width: 1rem;
-                    height: 1rem;
-                    vertical-align: -0.125em;
-                    border: 0.15em solid currentColor;
-                    border-right-color: transparent;
-                    border-radius: 50%;
-                    animation: spinner-border 0.75s linear infinite;
-                }
-                
-                @keyframes spinner-border {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
         </section>
     );
 };

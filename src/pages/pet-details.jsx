@@ -14,20 +14,25 @@ const PetDetails = () => {
     const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+    // В pet-details.jsx исправьте этот блок:
     useEffect(() => {
         const loadPetDetails = async () => {
             try {
                 setLoading(true);
                 const response = await ApiService.getPetDetails(id);
-                
-                if (response && response.data && response.data.pet && response.data.pet.length > 0) {
-                    setPet(response.data.pet[0]);
+
+                console.log('API Response:', response); // Для отладки
+
+                // ИСПРАВЛЕННАЯ ПРОВЕРКА: pet - это объект, а не массив
+                if (response && response.data && response.data.pet) {
+                    setPet(response.data.pet); // Просто берем объект pet
+                    console.log('Pet data set:', response.data.pet);
                 } else {
                     setError('Животное не найдено');
                 }
             } catch (error) {
                 console.error('Ошибка при загрузке информации о животном:', error);
-                
+
                 if (error.status === 404) {
                     setError('Животное не найдено');
                 } else if (error.status === 204) {
@@ -80,20 +85,39 @@ const PetDetails = () => {
     const getPhotosArray = () => {
         if (!pet) return [];
         
+        console.log('Raw photos array:', pet.photos);
+        
         // Если есть массив photos
-        if (pet.photos && Array.isArray(pet.photos) && pet.photos.length > 0) {
-            return pet.photos;
+        if (pet.photos && Array.isArray(pet.photos)) {
+            // Фильтруем: убираем null, пустые строки, и проверяем валидность пути
+            const filteredPhotos = pet.photos.filter(photo => {
+                // Проверяем, что фото не null/undefined и не пустая строка
+                if (!photo) return false;
+                
+                // Проверяем, что это строка
+                if (typeof photo !== 'string') return false;
+                
+                // Проверяем, что содержит хотя бы один слеш (признак пути)
+                return photo.includes('/');
+            });
+            
+            console.log('Filtered photos:', filteredPhotos);
+            return filteredPhotos;
         }
         
-        // Если есть одно фото
-        if (pet.photo) {
+        // Если есть одно фото в поле photo
+        if (pet.photo && typeof pet.photo === 'string' && pet.photo.includes('/')) {
+            console.log('Using single photo:', pet.photo);
             return [pet.photo];
         }
         
+        console.log('No valid photos found');
         return [];
     };
 
     const photos = getPhotosArray();
+    const hasPhotos = photos.length > 0;
+    const currentPhotoUrl = hasPhotos ? ApiService.getImageUrl(photos[activeImageIndex]) : null;
 
     if (loading) {
         return (
@@ -145,17 +169,19 @@ const PetDetails = () => {
                         {/* Изображения */}
                         <div className="col-md-6">
                             <div className="position-relative" style={{ minHeight: '400px' }}>
-                                {photos.length > 0 ? (
+                                {hasPhotos ? (
                                     <>
                                         <img 
-                                            src={photos[activeImageIndex] || placeholderImage} 
+                                            src={currentPhotoUrl} 
                                             className="img-fluid rounded-start w-100 h-100" 
                                             alt={pet.kind}
                                             style={{ objectFit: 'cover' }}
                                             onError={(e) => {
+                                                console.error('Image load error:', e.target.src);
                                                 e.target.src = placeholderImage;
                                                 e.target.style.objectFit = 'contain';
                                             }}
+                                            onLoad={() => console.log('Image loaded successfully:', currentPhotoUrl)}
                                         />
                                         
                                         {/* Навигация по изображениям */}

@@ -120,49 +120,6 @@ const SearchHeader = ({ searchQuery: externalSearchQuery, onSearchChange, sugges
                     </div>
                 </div>
             </div>
-            
-            <style jsx>{`
-                .suggestions-dropdown {
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    right: 0;
-                    background: white;
-                    border: 1px solid #dee2e6;
-                    border-top: none;
-                    border-radius: 0 0 0.375rem 0.375rem;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    z-index: 1000;
-                    max-height: 300px;
-                    overflow-y: auto;
-                }
-                
-                .suggestion-item {
-                    padding: 10px 15px;
-                    cursor: pointer;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid #f8f9fa;
-                    transition: background-color 0.2s;
-                }
-                
-                .suggestion-item:hover {
-                    background-color: #f8f9fa;
-                }
-                
-                .suggestion-item:last-child {
-                    border-bottom: none;
-                }
-                
-                .suggestion-text {
-                    flex: 1;
-                }
-                
-                .suggestion-meta {
-                    margin-left: 10px;
-                }
-            `}</style>
         </div>
     );
 };

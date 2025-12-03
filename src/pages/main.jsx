@@ -9,6 +9,8 @@ import ApiService from '../services/api';
 import placeholderImage from '../assets/images/placeholder.svg';
 
 const Main = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userName, setUserName] = useState('');
     const [sliderPets, setSliderPets] = useState([]);
     const [recentPets, setRecentPets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,6 +20,8 @@ const Main = () => {
 
     // Загрузка данных для слайдера
     useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        setIsAuthenticated(!!token);
         const loadData = async () => {
             try {
                 setLoading(true);
@@ -126,7 +130,7 @@ const Main = () => {
 
     return (
         <div>
-            <Header isAuthenticated={false} />
+            <Header isAuthenticated={isAuthenticated} userName={userName} />
             
             <SearchHeader 
                 searchQuery={searchQuery}

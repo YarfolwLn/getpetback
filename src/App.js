@@ -14,7 +14,14 @@ import './App.css';
 // Компонент для проверки авторизации
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('auth_token');
-    return token ? children : <Navigate to="/register" />;
+    console.log('PrivateRoute: токен =', token ? 'ЕСТЬ' : 'НЕТ');
+    
+    if (!token) {
+        console.log('PrivateRoute: нет токена, редирект на /register');
+        return <Navigate to="/register" />;
+    }
+    
+    return children;
 };
 
 function App() {

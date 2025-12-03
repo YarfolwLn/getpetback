@@ -78,11 +78,11 @@ const Register = () => {
             setErrors(validationErrors);
             return;
         }
-
+    
         setLoading(true);
         setErrors({});
         setSuccessMessage('');
-
+    
         try {
             const userData = {
                 name: formData.register.name,
@@ -92,24 +92,33 @@ const Register = () => {
                 password_confirmation: formData.register.confirmPassword,
                 confirm: formData.register.agreeTerms ? 1 : 0
             };
-
+    
+            // 1. Регистрация
             const response = await ApiService.register(userData);
+            console.log('Ответ от регистрации:', response);
             
             if (response && !response.error) {
+                // Сохраняем email
+                const userEmail = formData.register.email;
+                localStorage.setItem('user_email', userEmail);
+                
                 setSuccessMessage('Регистрация успешна! Выполняется вход...');
                 
-                // Автоматический вход после регистрации
+                // 2. Автоматический вход после регистрации
                 setTimeout(async () => {
                     try {
                         const loginResult = await ApiService.login(
-                            formData.register.email,
+                            userEmail,
                             formData.register.password
                         );
                         
                         if (loginResult && loginResult.data && loginResult.data.token) {
+                            console.log('Автоматический вход выполнен');
+                            // Данные пользователя будут получены на странице профиля
                             navigate('/profile');
                         }
                     } catch (loginError) {
+                        console.error('Ошибка при автоматическом входе:', loginError);
                         setErrors({ login: 'Ошибка при автоматическом входе' });
                     }
                 }, 1500);
@@ -122,7 +131,6 @@ const Register = () => {
             console.error('Registration error:', error);
             
             if (error.status === 422) {
-                // Ошибки валидации с сервера
                 const serverErrors = error.data?.error?.errors || {};
                 const formattedErrors = {};
                 
@@ -149,18 +157,28 @@ const Register = () => {
         setLoading(true);
         setErrors({});
         setSuccessMessage('');
-
+    
         try {
+            // 1. Выполняем вход
             const result = await ApiService.login(
                 formData.login.email,
                 formData.login.password
             );
             
             if (result && result.data && result.data.token) {
+                console.log('Вход выполнен, токен получен');
+                
+                // Сохраняем email (опционально, для отображения)
+                localStorage.setItem('user_email', formData.login.email);
+                
+                // Данные пользователя будут получены на странице профиля
+                // через запрос GET /users с токеном
+                
                 setSuccessMessage('Вход выполнен успешно!');
                 setTimeout(() => {
                     navigate('/profile');
                 }, 1000);
+                
             } else {
                 setErrors({ login: 'Ошибка при входе' });
             }
