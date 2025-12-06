@@ -72,6 +72,10 @@ const PetDetails = () => {
         }
     }, [id]);
 
+    const getStatusBadge = (registered) => {
+        return registered ? 'bg-success' : 'bg-secondary';
+    };
+
     const handlePreviousImage = () => {
         if (pet && pet.photos && pet.photos.length > 0) {
             setActiveImageIndex((prevIndex) => 
@@ -286,7 +290,7 @@ const PetDetails = () => {
                                             <tr>
                                                 <th className="text-muted">Статус:</th>
                                                 <td>
-                                                    <span className="badge bg-success">
+                                                    <span className={`badge ${getStatusBadge(pet.registered)}`}>
                                                         {pet.registered ? 'Зарегистрировано' : 'Не зарегистрировано'}
                                                     </span>
                                                 </td>

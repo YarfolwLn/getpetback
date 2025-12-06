@@ -20,7 +20,7 @@ const SearchPage = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [searchSuggestions, setSearchSuggestions] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [userName, setUserName] = useState('');
+    // Удалена неиспользуемая переменная userName
     const pageSize = 8;
 
     const districts = [
@@ -121,22 +121,7 @@ const SearchPage = () => {
         }
     }, [loadAllOrders]);
 
-    useEffect(() => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            const userDataStr = localStorage.getItem('user_data');
-            if (userDataStr) {
-                try {
-                    const userData = JSON.parse(userDataStr);
-                    if (userData.name) {
-                        setUserName(userData.name);
-                    }
-                } catch (error) {
-                    console.error('Ошибка при чтении user_data:', error);
-                }
-            }
-        }
-    }, []);
+    // Удален useEffect для userName, так как переменная больше не используется
 
     useEffect(() => {
         const queryParams = getQueryParams();
@@ -156,19 +141,35 @@ const SearchPage = () => {
     }, [location.search, getQueryParams, performSearch, loadAllOrders]);
 
     useEffect(() => {
-        if (searchQuery.length > 3) {
+        if (searchQuery.length > 2) {
             const timer = setTimeout(async () => {
                 try {
-                    const response = await ApiService.searchPets(searchQuery, 1000);
+                    // Используем searchOrders для получения подсказок
+                    const response = await ApiService.searchOrders({ kind: searchQuery });
+                    
                     if (response && response.data && response.data.orders) {
-                        setSearchSuggestions(response.data.orders.slice(0, 5));
+                        // Берем только первые 5 результатов для подсказок
+                        const suggestions = response.data.orders.slice(0, 10);
+                        
+                        // Данные для подсказок
+                        const formattedSuggestions = suggestions.map(order => ({
+                            id: order.id,
+                            kind: order.kind || '',
+                            description: order.description || '',
+                            district: order.district || '',
+                            photo: order.photo || order.photos || null
+                        }));
+                        
+                        setSearchSuggestions(formattedSuggestions);
+                    } else {
+                        setSearchSuggestions([]);
                     }
                 } catch (error) {
-                    console.error('Ошибка при поиске:', error);
+                    console.error('Ошибка при поиске подсказок:', error);
                     setSearchSuggestions([]);
                 }
-            }, 1000);
-
+            }, 300); // Задержка 300мс для быстрого отклика
+    
             return () => clearTimeout(timer);
         } else {
             setSearchSuggestions([]);

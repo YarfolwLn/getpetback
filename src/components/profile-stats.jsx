@@ -17,7 +17,7 @@ const ProfileStats = ({ adsCount, petsCount }) => {
                 </div>
                 <h2 className="card-title h5 mt-3">Быстрые действия</h2>
                 <div className="d-grid gap-2">
-                    <a href="/add-ad" className="btn btn-primary">
+                    <a href="/add" className="btn btn-primary">
                         <i className="bi bi-plus-circle me-1"></i>Добавить объявление
                     </a>
                     <button className="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">

@@ -73,7 +73,7 @@ class ApiService {
     // Получение объявлений текущего пользователя
     async getCurrentUserOrders() {
         console.log('Получение объявлений текущего пользователя через /users/orders');
-        const result = await this.request('/users/orders');
+        let result = await this.request('/users/orders');
         
         // Преобразуем пути изображений
         if (result && result.data && result.data.orders) {
@@ -183,10 +183,10 @@ class ApiService {
             
             if (!response.ok) {
                 console.error(`API Error ${response.status}:`, responseData);
-                throw {
-                    status: response.status,
-                    data: responseData
-                };
+                const error = new Error(`API Error ${response.status}`);
+                error.status = response.status;
+                error.data = responseData;
+                throw error; // Выбрасываем экземпляр Error
             }
 
             return responseData;
@@ -342,12 +342,12 @@ class ApiService {
 
     // Обновление телефона
     async updatePhone(userId, phone) {
-        return this.request(`/users/${userId}/phone`, 'PATCH', { phone });
+        return this.request(`/users/phone`, 'PATCH', { phone });
     }
 
     // Обновление email
     async updateEmail(userId, email) {
-        return this.request(`/users/${userId}/email`, 'PATCH', { email });
+        return this.request(`/users/email`, 'PATCH', { email });
     }
 
     // Объявления пользователя
@@ -390,4 +390,5 @@ class ApiService {
     
 }
 
-export default new ApiService();
+const apiService = new ApiService();
+export default apiService;

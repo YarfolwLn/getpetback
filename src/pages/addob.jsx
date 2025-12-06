@@ -30,6 +30,11 @@ const Addob = () => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        password: '',
+        password_confirmation: ''
+    });
     const [districts] = useState([
         'Адмиралтейский район',
         'Василеостровский район',
@@ -131,8 +136,8 @@ const Addob = () => {
             }
         }
 
-        // Валидация пароля при регистрации
-        if (formData.register) {
+        // Валидация пароля при регистрации для НЕавторизованных пользователей
+        if (formData.register && !isAuthenticated) {
             if (!formData.password.trim()) {
                 newErrors.password = 'Введите пароль';
             } else {
@@ -157,6 +162,28 @@ const Addob = () => {
         return newErrors;
     };
 
+    // Валидация пароля в модальном окне
+    const validatePassword = () => {
+        const newErrors = {};
+
+        if (!passwordData.password.trim()) {
+            newErrors.password = 'Введите пароль';
+        } else {
+            const passwordValidation = validateField('password', passwordData.password);
+            if (!passwordValidation.isValid) {
+                newErrors.password = passwordValidation.message;
+            }
+        }
+        
+        if (!passwordData.password_confirmation.trim()) {
+            newErrors.password_confirmation = 'Подтвердите пароль';
+        } else if (passwordData.password !== passwordData.password_confirmation) {
+            newErrors.password_confirmation = 'Пароли не совпадают';
+        }
+
+        return newErrors;
+    };
+
     const handleInputChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
@@ -171,6 +198,13 @@ const Addob = () => {
                 return newErrors;
             });
         }
+    };
+
+    const handlePasswordChange = (field, value) => {
+        setPasswordData(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
     const handleImageChange = (e, index) => {
@@ -238,6 +272,28 @@ const Addob = () => {
             return;
         }
 
+        // Если пользователь авторизован, показываем модальное окно для подтверждения пароля
+        if (isAuthenticated) {
+            setShowPasswordModal(true);
+            return;
+        }
+
+        // Если пользователь не авторизован, продолжаем стандартную отправку
+        await submitForm();
+    };
+
+    const handlePasswordSubmit = async () => {
+        const validationErrors = validatePassword();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setShowPasswordModal(false);
+        await submitForm();
+    };
+
+    const submitForm = async () => {
         setLoading(true);
         setErrors({});
         setSuccessMessage('');
@@ -265,8 +321,13 @@ const Addob = () => {
                 formDataObj.append('mark', formData.mark);
             }
 
-            // Если выбрана регистрация
-            if (formData.register) {
+            // Если пользователь авторизован, добавляем пароль из модального окна
+            if (isAuthenticated) {
+                formDataObj.append('password', passwordData.password);
+                formDataObj.append('password_confirmation', passwordData.password_confirmation);
+            }
+            // Если НЕ авторизован, но выбрана регистрация
+            else if (formData.register) {
                 formDataObj.append('password', formData.password);
                 formDataObj.append('password_confirmation', formData.password_confirmation);
             }
@@ -280,7 +341,7 @@ const Addob = () => {
                 setSuccessMessage('Объявление успешно создано!');
                 
                 // Если пользователь зарегистрировался через эту форму
-                if (formData.register && response.data.token) {
+                if ((formData.register && !isAuthenticated) && response.data.token) {
                     console.log('Пользователь зарегистрировался, сохраняем токен');
                     AuthService.login(response.data.token, {
                         name: formData.name,
@@ -324,9 +385,9 @@ const Addob = () => {
     };
 
     const renderPasswordRequirements = () => {
-        if (!formData.register) return null;
+        if (!formData.register && !isAuthenticated) return null;
         
-        const password = formData.password;
+        const password = isAuthenticated ? passwordData.password : formData.password;
         const requirements = [
             { text: 'Минимум 7 символов', met: password.length >= 7 },
             { text: 'Хотя бы 1 цифра', met: /\d/.test(password) },
@@ -362,7 +423,7 @@ const Addob = () => {
                         {isAuthenticated && (
                             <div className="alert alert-info mb-4">
                                 <i className="bi bi-info-circle me-2"></i>
-                                Вы авторизованы как <strong>{userName}</strong>. Контактные данные заполнены автоматически.
+                                Вы авторизованы как <strong>{userName}</strong>. Для публикации объявления требуется подтвердить пароль.
                             </div>
                         )}
 
@@ -595,28 +656,29 @@ const Addob = () => {
                                 </div>
                             </div>
 
-                            <div className="mb-4">
-                                <div className="form-check">
-                                    <input 
-                                        className="form-check-input"
-                                        type="checkbox" 
-                                        id="register" 
-                                        checked={formData.register}
-                                        onChange={(e) => handleInputChange('register', e.target.checked)}
-                                        disabled={loading || isAuthenticated}
-                                    />
-                                    <label className="form-check-label fw-bold" htmlFor="register">
-                                        Зарегистрировать меня как пользователя
-                                    </label>
-                                    <div className="form-text">
-                                        {isAuthenticated 
-                                            ? 'Вы уже авторизованы'
-                                            : 'Если отмечено, будет создан аккаунт с указанными email и паролем'
-                                        }
+                            {/* Скрываем чекбокс регистрации для авторизованных пользователей */}
+                            {!isAuthenticated && (
+                                <div className="mb-4">
+                                    <div className="form-check">
+                                        <input 
+                                            className="form-check-input"
+                                            type="checkbox" 
+                                            id="register" 
+                                            checked={formData.register}
+                                            onChange={(e) => handleInputChange('register', e.target.checked)}
+                                            disabled={loading}
+                                        />
+                                        <label className="form-check-label fw-bold" htmlFor="register">
+                                            Зарегистрировать меня как пользователя
+                                        </label>
+                                        <div className="form-text">
+                                            Если отмечено, будет создан аккаунт с указанными email и паролем
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
+                            {/* Поля пароля для НЕавторизованных пользователей с регистрацией */}
                             {formData.register && !isAuthenticated && (
                                 <div className="password-fields mb-4 show" id="passwordFields">
                                     <h5 className="fw-bold mb-3">Пароль для регистрации *</h5>
@@ -695,7 +757,8 @@ const Addob = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <i className="bi bi-send me-1"></i>Опубликовать объявление
+                                            <i className="bi bi-send me-1"></i>
+                                            {isAuthenticated ? 'Подтвердить и опубликовать' : 'Опубликовать объявление'}
                                         </>
                                     )}
                                 </button>
@@ -704,6 +767,87 @@ const Addob = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Модальное окно для подтверждения пароля (только для авторизованных пользователей) */}
+            {showPasswordModal && (
+                <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered" role="document">
+                        <div className="modal-content">
+                            <div className="modal-header bg-primary text-white">
+                                <h5 className="modal-title">
+                                    <i className="bi bi-shield-lock me-2"></i>Подтверждение пароля
+                                </h5>
+                            </div>
+                            <div className="modal-body">
+                                <p>Для публикации объявления, пожалуйста, подтвердите свой пароль:</p>
+                                
+                                <div className="mb-3">
+                                    <label htmlFor="modalPassword" className="form-label">Пароль *</label>
+                                    <input 
+                                        type="password" 
+                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                        id="modalPassword" 
+                                        value={passwordData.password}
+                                        onChange={(e) => handlePasswordChange('password', e.target.value)}
+                                        placeholder="Введите ваш пароль"
+                                        disabled={loading}
+                                    />
+                                    {errors.password && (
+                                        <div className="invalid-feedback">
+                                            {errors.password}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="mb-3">
+                                    <label htmlFor="modalPasswordConfirm" className="form-label">Подтверждение пароля *</label>
+                                    <input 
+                                        type="password" 
+                                        className={`form-control ${errors.password_confirmation ? 'is-invalid' : ''}`}
+                                        id="modalPasswordConfirm" 
+                                        value={passwordData.password_confirmation}
+                                        onChange={(e) => handlePasswordChange('password_confirmation', e.target.value)}
+                                        placeholder="Повторите пароль"
+                                        disabled={loading}
+                                    />
+                                    {errors.password_confirmation && (
+                                        <div className="invalid-feedback">
+                                            {errors.password_confirmation}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {renderPasswordRequirements()}
+                            </div>
+                            <div className="modal-footer">
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary" 
+                                    onClick={() => setShowPasswordModal(false)}
+                                    disabled={loading}
+                                >
+                                    Отмена
+                                </button>
+                                <button 
+                                    type="button" 
+                                    className="btn btn-primary" 
+                                    onClick={handlePasswordSubmit}
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            Проверка...
+                                        </>
+                                    ) : (
+                                        'Подтвердить'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
             <LogoutModal />

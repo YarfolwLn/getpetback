@@ -1,13 +1,12 @@
 // src/components/header.jsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 import logo from '../assets/images/logo.jpg';
 
 const Header = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [userName, setUserName] = useState('');
-    const navigate = useNavigate();
 
     // Обновление состояния авторизации при изменении
     useEffect(() => {
@@ -29,12 +28,6 @@ const Header = () => {
             window.removeEventListener('userDataUpdate', updateAuthState);
         };
     }, []);
-
-    const handleLogout = () => {
-        console.log('Выход из системы');
-        AuthService.logout();
-        navigate('/');
-    };
 
     return (
         <header className="modern-navbar navbar navbar-expand-lg navbar-light bg-light sticky-top">
@@ -64,18 +57,11 @@ const Header = () => {
                     <div className="d-flex align-items-center">
                         {isAuthenticated ? (
                             <>
-                                <div className="me-3 d-flex align-items-center">
-                                    <i className="bi bi-person-circle me-2"></i>
-                                    <span className="fw-medium">{userName || 'Пользователь'}</span>
-                                </div>
                                 <Link className="btn btn-primary me-2" to="/profile">
-                                    <i className="bi bi-person me-1"></i>Личный кабинет
+                                    <i className="bi bi-person me-1"></i><span className="fw-default">{userName || 'Пользователь'}</span> | Личный кабинет
                                 </Link>
-                                <button 
-                                    className="btn btn-outline-danger" 
-                                    onClick={handleLogout}
-                                >
-                                    <i className="bi bi-box-arrow-right me-1"></i>Выйти
+                                <button className="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                    <i className="bi bi-box-arrow-right me-1" ></i>Выйти
                                 </button>
                             </>
                         ) : (
