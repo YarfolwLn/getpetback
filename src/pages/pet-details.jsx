@@ -13,8 +13,30 @@ const PetDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [userName, setUserName] = useState('');
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // В pet-details.jsx исправьте этот блок:
+    // Получаем информацию об авторизации и имени пользователя
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        setIsAuthenticated(!!token);
+        
+        if (token) {
+            // Пытаемся получить имя пользователя из localStorage
+            const userDataStr = localStorage.getItem('user_data');
+            if (userDataStr) {
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    if (userData.name) {
+                        setUserName(userData.name);
+                    }
+                } catch (error) {
+                    console.error('Ошибка при чтении user_data:', error);
+                }
+            }
+        }
+    }, []);
+
     useEffect(() => {
         const loadPetDetails = async () => {
             try {
@@ -122,7 +144,7 @@ const PetDetails = () => {
     if (loading) {
         return (
             <div>
-                <Header isAuthenticated={false} />
+                <Header isAuthenticated={isAuthenticated} userName={userName} />
                 <div className="container py-5 text-center">
                     <div className="spinner-border text-primary" role="status" style={{width: '3rem', height: '3rem'}}>
                         <span className="visually-hidden">Загрузка...</span>
@@ -136,7 +158,7 @@ const PetDetails = () => {
     if (error || !pet) {
         return (
             <div>
-                <Header isAuthenticated={false} />
+                <Header isAuthenticated={isAuthenticated} userName={userName} />
                 <div className="container py-5">
                     <div className="alert alert-danger" role="alert">
                         {error || 'Животное не найдено'}
@@ -154,7 +176,7 @@ const PetDetails = () => {
 
     return (
         <div>
-            <Header isAuthenticated={false} />
+            <Header isAuthenticated={isAuthenticated} userName={userName} />
             
             <div className="container py-5">
                 <button 

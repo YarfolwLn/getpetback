@@ -40,6 +40,20 @@ class ApiService {
         }
     }
 
+    // Получение имени пользователя
+    getStoredUserName() {
+        const userDataStr = localStorage.getItem('user_data');
+        if (userDataStr) {
+            try {
+                const userData = JSON.parse(userDataStr);
+                return userData.name || '';
+            } catch (error) {
+                console.error('Ошибка при чтении данных пользователя:', error);
+            }
+        }
+        return '';
+    }
+
     // Получение ID пользователя из токена
     getUserIdFromToken() {
         // Просто проверяем сохраненный ID
@@ -348,7 +362,7 @@ class ApiService {
 
     // Редактирование объявления
     async updateOrder(orderId, formData) {
-        return this.request(`/pets/${orderId}`, 'PATCH', formData, true);
+        return this.request(`/pets/${orderId}`, 'POST', formData, true);
     }
 
     // Получение карточки животного

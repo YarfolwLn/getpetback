@@ -1,5 +1,4 @@
-// src/pages/searchpage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
@@ -21,7 +20,8 @@ const SearchPage = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [searchSuggestions, setSearchSuggestions] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const pageSize = 10;
+    const [userName, setUserName] = useState('');
+    const pageSize = 8;
 
     const districts = [
         'Адмиралтейский район',
@@ -44,64 +44,21 @@ const SearchPage = () => {
         'Центральный район'
     ];
 
-    // Получение параметров из URL
-    const getQueryParams = () => {
+    const getQueryParams = useCallback(() => {
         const params = new URLSearchParams(location.search);
         return {
-            animalType: params.get('animalType') || '',
+            animalType: params.get('animalType') || params.get('kind') || '',
             district: params.get('district') || ''
         };
-    };
-
-    // При изменении URL
-    useEffect(() => {
-        const queryParams = getQueryParams();
-        const newSearchParams = {
-            animalType: queryParams.animalType,
-            district: queryParams.district
-        };
-        
-        setSearchParams(newSearchParams);
-        setSearchQuery(queryParams.animalType);
-        
-        if (queryParams.animalType || queryParams.district) {
-            performSearch(1, newSearchParams);
-        } else {
-            // Если нет параметров, показываем все объявления
-            loadAllOrders(1);
-        }
     }, [location.search]);
 
-    // Debounce поиск для подсказок
-    useEffect(() => {
-        if (searchQuery.length > 3) {
-            const timer = setTimeout(async () => {
-                try {
-                    const response = await ApiService.searchPets(searchQuery, 1000);
-                    if (response && response.data && response.data.orders) {
-                        setSearchSuggestions(response.data.orders.slice(0, 5));
-                    }
-                } catch (error) {
-                    console.error('Ошибка при поиске:', error);
-                    setSearchSuggestions([]);
-                }
-            }, 1000);
-
-            return () => clearTimeout(timer);
-        } else {
-            setSearchSuggestions([]);
-        }
-    }, [searchQuery]);
-
-    // Загрузка всех объявлений
-    const loadAllOrders = async (page) => {
+    const loadAllOrders = useCallback(async (page) => {
         setLoading(true);
         try {
             const response = await ApiService.searchOrders({});
             if (response && response.data && response.data.orders) {
                 const allResults = response.data.orders;
                 
-                // Пагинация на клиенте
                 const startIndex = (page - 1) * pageSize;
                 const endIndex = startIndex + pageSize;
                 const paginatedResults = allResults.slice(startIndex, endIndex);
@@ -122,26 +79,26 @@ const SearchPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    // Поиск с параметрами
-    const performSearch = async (page, params = searchParams) => {
+    const performSearch = useCallback(async (page, params) => {
         setLoading(true);
         setCurrentPage(page);
 
         try {
-            // Проверяем, что хотя бы один параметр есть
             if (!params.animalType && !params.district) {
                 await loadAllOrders(page);
                 return;
             }
 
-            const response = await ApiService.searchOrders(params);
+            const response = await ApiService.searchOrders({
+                kind: params.animalType,
+                district: params.district
+            });
             
             if (response && response.data && response.data.orders) {
                 const allResults = response.data.orders;
                 
-                // Пагинация на клиенте
                 const startIndex = (page - 1) * pageSize;
                 const endIndex = startIndex + pageSize;
                 const paginatedResults = allResults.slice(startIndex, endIndex);
@@ -162,17 +119,69 @@ const SearchPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [loadAllOrders]);
+
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            const userDataStr = localStorage.getItem('user_data');
+            if (userDataStr) {
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    if (userData.name) {
+                        setUserName(userData.name);
+                    }
+                } catch (error) {
+                    console.error('Ошибка при чтении user_data:', error);
+                }
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        const queryParams = getQueryParams();
+        const newSearchParams = {
+            animalType: queryParams.animalType,
+            district: queryParams.district
+        };
+        
+        setSearchParams(newSearchParams);
+        setSearchQuery(queryParams.animalType);
+        
+        if (queryParams.animalType || queryParams.district) {
+            performSearch(1, newSearchParams);
+        } else {
+            loadAllOrders(1);
+        }
+    }, [location.search, getQueryParams, performSearch, loadAllOrders]);
+
+    useEffect(() => {
+        if (searchQuery.length > 3) {
+            const timer = setTimeout(async () => {
+                try {
+                    const response = await ApiService.searchPets(searchQuery, 1000);
+                    if (response && response.data && response.data.orders) {
+                        setSearchSuggestions(response.data.orders.slice(0, 5));
+                    }
+                } catch (error) {
+                    console.error('Ошибка при поиске:', error);
+                    setSearchSuggestions([]);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        } else {
+            setSearchSuggestions([]);
+        }
+    }, [searchQuery]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         
-        // Обновляем URL с новыми параметрами поиска
         const params = new URLSearchParams();
-        if (searchParams.animalType) params.append('animalType', searchParams.animalType);
+        if (searchParams.animalType) params.append('kind', searchParams.animalType);
         if (searchParams.district) params.append('district', searchParams.district);
         
-        // Обновляем URL без перезагрузки страницы
         navigate(`/search?${params.toString()}`);
         
         performSearch(1, searchParams);
@@ -183,7 +192,6 @@ const SearchPage = () => {
         setSearchQuery('');
         setCurrentPage(1);
         
-        // Очищаем query-параметры в URL
         navigate('/search');
         
         loadAllOrders(1);
@@ -204,8 +212,8 @@ const SearchPage = () => {
         setSearchParams(prev => ({ ...prev, animalType: value }));
     };
 
-    const getStatusBadge = (registered) => {
-        return registered ? 'bg-success' : 'bg-secondary';
+    const getStatusBadge = (registred) => {
+        return registred ? 'bg-success' : 'bg-secondary';
     };
 
     const renderPagination = () => {
@@ -220,7 +228,6 @@ const SearchPage = () => {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
 
-        // Кнопка "Первая"
         if (startPage > 1) {
             pages.push(
                 <li key="first" className="page-item">
@@ -238,7 +245,6 @@ const SearchPage = () => {
             }
         }
 
-        // Нумерация страниц
         for (let i = startPage; i <= endPage; i++) {
             pages.push(
                 <li key={i} className={`page-item ${i === currentPage ? 'active' : ''}`}>
@@ -249,7 +255,6 @@ const SearchPage = () => {
             );
         }
 
-        // Кнопка "Последняя"
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 pages.push(
@@ -296,7 +301,7 @@ const SearchPage = () => {
 
     return (
         <div>
-            <Header isAuthenticated={false} />
+            <Header />
             
             <SearchHeader 
                 searchQuery={searchQuery}
@@ -305,7 +310,6 @@ const SearchPage = () => {
             />
             
             <div className="container mt-4">
-                {/* Расширенный поиск */}
                 <div className="search-filters card mb-4">
                     <div className="card-body">
                         <h4 className="mb-3">Расширенный поиск</h4>
@@ -365,7 +369,6 @@ const SearchPage = () => {
                     </div>
                 </div>
 
-                {/* Статистика результатов */}
                 <div className="d-flex justify-content-between align-items-center mb-2">
                     <h4>
                         Найдено объявлений: 
@@ -378,7 +381,6 @@ const SearchPage = () => {
                     )}
                 </div>
 
-                {/* Спиннер загрузки */}
                 {loading && (
                     <div className="loading-spinner text-center py-5">
                         <div className="spinner-border text-primary" role="status" style={{width: '3rem', height: '3rem'}}>
@@ -388,7 +390,6 @@ const SearchPage = () => {
                     </div>
                 )}
 
-                {/* Результаты поиска */}
                 {!loading && (
                     <>
                         {results.length === 0 ? (
@@ -426,8 +427,8 @@ const SearchPage = () => {
                                                     <div className="mt-auto">
                                                         <div className="d-flex justify-content-between align-items-center mb-2">
                                                             <span className="badge district-badge">{ad.district}</span>
-                                                            <span className={`badge ${getStatusBadge(ad.registered)}`}>
-                                                                {ad.registered ? 'Зарегистрировано' : 'Не зарегистрировано'}
+                                                            <span className={`badge ${getStatusBadge(ad.registred)}`}>
+                                                                {ad.registred ? 'Зарегистрировано' : 'Не зарегистрировано'}
                                                             </span>
                                                         </div>
                                                         {ad.mark && (
@@ -439,19 +440,18 @@ const SearchPage = () => {
                                                 </div>
                                                 <div className="card-footer">
                                                     <small className="text-muted">{ad.date}</small>
-                                                    <button 
+                                                    <a 
                                                         className="btn btn-outline-primary btn-sm float-end"
-                                                        onClick={() => navigate(`/pet/${ad.id}`)}
+                                                        href={`/pet/${ad.id}`}
                                                     >
                                                         Подробнее
-                                                    </button>
+                                                    </a>
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Пагинация */}
                                 {renderPagination()}
                             </>
                         )}

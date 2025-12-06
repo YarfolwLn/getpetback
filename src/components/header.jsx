@@ -1,16 +1,49 @@
 // src/components/header.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/images/logo.jpg';
+import ApiService from '../services/api'; // Импортируем ApiService
 
-const Header = ({ isAuthenticated = false, userName = "Иван" }) => {
-    // Проверяем авторизацию по наличию токена
-    const checkAuth = () => {
-        const token = localStorage.getItem('auth_token');
-        return !!token || isAuthenticated;
-    };
-
-    const authenticated = checkAuth();
+const Header = ({ isAuthenticated = false, userName = "" }) => {
+    const [userNameState, setUserNameState] = useState(userName);
+    
+    useEffect(() => {
+        // Проверяем авторизацию по наличию токена
+        const checkAuthAndGetName = () => {
+            const token = localStorage.getItem('auth_token');
+            const authenticated = !!token || isAuthenticated;
+            
+            if (authenticated) {
+                // Пытаемся получить имя из пропсов
+                if (userName && userName.trim() !== '') {
+                    setUserNameState(userName);
+                } else {
+                    // Или из localStorage
+                    const storedName = ApiService.getStoredUserName();
+                    if (storedName && storedName.trim() !== '') {
+                        setUserNameState(storedName);
+                    } else {
+                        // Или из user_data в localStorage
+                        const userDataStr = localStorage.getItem('user_data');
+                        if (userDataStr) {
+                            try {
+                                const userData = JSON.parse(userDataStr);
+                                if (userData.name && userData.name.trim() !== '') {
+                                    setUserNameState(userData.name);
+                                }
+                            } catch (error) {
+                                console.error('Ошибка при чтении user_data:', error);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        checkAuthAndGetName();
+    }, [isAuthenticated, userName]);
+    
+    const authenticated = !!localStorage.getItem('auth_token') || isAuthenticated;
 
     return (
         <nav className="navbar navbar-expand-lg bg-body-tertiary modern-navbar">
@@ -31,9 +64,11 @@ const Header = ({ isAuthenticated = false, userName = "Иван" }) => {
                         )}
                         
                         {/* Всегда показываем регистрацию/вход */}
-                        <li className="nav-item">
-                            <Link className="nav-link" to="/register">Регистрация/Вход</Link>
-                        </li>
+                        {!authenticated && (
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/register">Регистрация/Вход</Link>
+                            </li>
+                        )}  
                         
                         {/* Всегда показываем добавление объявления */}
                         <li className="nav-item">
@@ -52,7 +87,7 @@ const Header = ({ isAuthenticated = false, userName = "Иван" }) => {
                             <div className="nav-item dropdown">
                                 <a className="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                                     <i className="bi bi-person-circle me-2"></i>
-                                    {userName}
+                                    {userNameState || "Пользователь"}
                                 </a>
                                 <ul className="dropdown-menu">
                                     <li><Link className="dropdown-item" to="/profile"><i className="bi bi-person me-2"></i>Личный кабинет</Link></li>

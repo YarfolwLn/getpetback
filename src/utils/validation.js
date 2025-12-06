@@ -1,4 +1,3 @@
-// src/utils/validation.js
 export const validationRules = {
     name: {
         pattern: /^[а-яА-ЯёЁ\s-]+$/,

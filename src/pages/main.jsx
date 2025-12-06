@@ -22,6 +22,21 @@ const Main = () => {
     useEffect(() => {
         const token = localStorage.getItem('auth_token');
         setIsAuthenticated(!!token);
+        
+        if (token) {
+            const userDataStr = localStorage.getItem('user_data');
+            if (userDataStr) {
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    if (userData.name) {
+                        setUserName(userData.name);
+                    }
+                } catch (error) {
+                    console.error('Ошибка при чтении user_data:', error);
+                }
+            }
+        }
+
         const loadData = async () => {
             try {
                 setLoading(true);
