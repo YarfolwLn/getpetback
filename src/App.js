@@ -24,6 +24,18 @@ const PrivateRoute = ({ children }) => {
     return children;
 };
 
+// Компонент для редиректа авторизованных пользователей с register
+const PublicRoute = ({ children }) => {
+    const token = localStorage.getItem('auth_token');
+    
+    if (token) {
+        console.log('PublicRoute: пользователь уже авторизован, редирект в профиль');
+        return <Navigate to="/profile" />;
+    }
+    
+    return children;
+};
+
 function App() {
     return (
         <Router>
@@ -31,8 +43,16 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Main />} />
                     <Route path="/search" element={<SearchPage />} />
-                    <Route path="/register" element={<Register />} />
                     <Route path="/pet/:id" element={<PetDetails />} />
+                    
+                    {/* Публичный маршрут только для регистрации */}
+                    <Route path="/register" element={
+                        <PublicRoute>
+                            <Register />
+                        </PublicRoute>
+                    } />
+                    
+                    {/* Страница добавления объявления - доступна всем */}
                     <Route path="/add" element={<Addob />} />
                     
                     {/* Защищенный маршрут для профиля */}

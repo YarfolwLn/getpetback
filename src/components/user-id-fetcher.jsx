@@ -1,4 +1,3 @@
-// src/components/user-id-fetcher.jsx
 import React, { useEffect } from 'react';
 import ApiService from '../services/api';
 

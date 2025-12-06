@@ -5,10 +5,13 @@ import Header from '../components/header';
 import Footer from '../components/footer';
 import LogoutModal from '../components/logout-modal';
 import ApiService from '../services/api';
+import AuthService from '../services/AuthService';
 import { validateField } from '../utils/validation';
 
 const Addob = () => {
     const navigate = useNavigate();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userName, setUserName] = useState('');
     const [formData, setFormData] = useState({
         petType: '',
         petDescription: '',
@@ -48,32 +51,36 @@ const Addob = () => {
         'Центральный район'
     ]);
 
-    // Автозаполнение данных для авторизованного пользователя
+    // Проверка авторизации и загрузка данных пользователя
     useEffect(() => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            // Загружаем данные пользователя
-            const loadUserData = async () => {
-                try {
-                    const userId = 1; // В реальном приложении нужно получить ID пользователя
-                    const response = await ApiService.getUserProfile(userId);
-                    
-                    if (response && response.data && response.data.user) {
-                        const user = response.data.user[0];
-                        setFormData(prev => ({
-                            ...prev,
-                            name: user.name || '',
-                            phone: user.phone || '',
-                            email: user.email || ''
-                        }));
-                    }
-                } catch (error) {
-                    console.error('Ошибка при загрузке данных пользователя:', error);
-                }
-            };
+        const checkAuthAndLoadData = () => {
+            const authStatus = AuthService.isAuthenticated();
+            setIsAuthenticated(authStatus);
             
-            loadUserData();
-        }
+            if (authStatus) {
+                const userData = AuthService.getUserData();
+                if (userData) {
+                    setUserName(userData.name || '');
+                    setFormData(prev => ({
+                        ...prev,
+                        name: userData.name || '',
+                        phone: userData.phone || '',
+                        email: userData.email || ''
+                    }));
+                }
+            }
+        };
+
+        checkAuthAndLoadData();
+
+        // Подписываемся на события изменения авторизации
+        window.addEventListener('authChange', checkAuthAndLoadData);
+        window.addEventListener('userDataUpdate', checkAuthAndLoadData);
+
+        return () => {
+            window.removeEventListener('authChange', checkAuthAndLoadData);
+            window.removeEventListener('userDataUpdate', checkAuthAndLoadData);
+        };
     }, []);
 
     // Валидация формы
@@ -264,10 +271,23 @@ const Addob = () => {
                 formDataObj.append('password_confirmation', formData.password_confirmation);
             }
 
+            console.log('Отправка объявления...');
             const response = await ApiService.createOrder(formDataObj);
+            
+            console.log('Ответ от создания объявления:', response);
             
             if (response && response.data && response.data.id) {
                 setSuccessMessage('Объявление успешно создано!');
+                
+                // Если пользователь зарегистрировался через эту форму
+                if (formData.register && response.data.token) {
+                    console.log('Пользователь зарегистрировался, сохраняем токен');
+                    AuthService.login(response.data.token, {
+                        name: formData.name,
+                        email: formData.email,
+                        phone: formData.phone
+                    });
+                }
                 
                 // Перенаправляем на страницу с деталями через 2 секунды
                 setTimeout(() => {
@@ -328,7 +348,7 @@ const Addob = () => {
 
     return (
         <div>
-            <Header isAuthenticated={false} />
+            <Header />
             
             <div className="container form-container">
                 <div className="card shadow">
@@ -338,6 +358,14 @@ const Addob = () => {
                         </h2>
                     </div>
                     <div className="card-body p-4">
+                        {/* Информация для авторизованных пользователей */}
+                        {isAuthenticated && (
+                            <div className="alert alert-info mb-4">
+                                <i className="bi bi-info-circle me-2"></i>
+                                Вы авторизованы как <strong>{userName}</strong>. Контактные данные заполнены автоматически.
+                            </div>
+                        )}
+
                         {/* Сообщения об ошибках и успехе */}
                         {errors.general && (
                             <div className="alert alert-danger" role="alert">
@@ -575,18 +603,21 @@ const Addob = () => {
                                         id="register" 
                                         checked={formData.register}
                                         onChange={(e) => handleInputChange('register', e.target.checked)}
-                                        disabled={loading}
+                                        disabled={loading || isAuthenticated}
                                     />
                                     <label className="form-check-label fw-bold" htmlFor="register">
                                         Зарегистрировать меня как пользователя
                                     </label>
                                     <div className="form-text">
-                                        Если отмечено, будет создан аккаунт с указанными email и паролем
+                                        {isAuthenticated 
+                                            ? 'Вы уже авторизованы'
+                                            : 'Если отмечено, будет создан аккаунт с указанными email и паролем'
+                                        }
                                     </div>
                                 </div>
                             </div>
 
-                            {formData.register && (
+                            {formData.register && !isAuthenticated && (
                                 <div className="password-fields mb-4 show" id="passwordFields">
                                     <h5 className="fw-bold mb-3">Пароль для регистрации *</h5>
                                     

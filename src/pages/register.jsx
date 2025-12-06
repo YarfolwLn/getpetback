@@ -1,10 +1,14 @@
 // src/pages/register.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
-import LogoutModal from '../components/logout-modal';
+import FormTabs from '../components/FormTabs';
+import RegisterForm from '../components/RegisterForm';
+import LoginForm from '../components/LoginForm';
+import PasswordRequirements from '../components/PasswordRequirements';
 import ApiService from '../services/api';
+import AuthService from '../services/AuthService';
 import { validateField } from '../utils/validation';
 
 const Register = () => {
@@ -27,6 +31,14 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
+
+    // Проверяем, авторизован ли пользователь при загрузке
+    useEffect(() => {
+        if (AuthService.isAuthenticated()) {
+            console.log('Пользователь уже авторизован, перенаправление в профиль');
+            navigate('/profile');
+        }
+    }, [navigate]);
 
     // Валидация формы регистрации
     const validateRegisterForm = () => {
@@ -93,29 +105,42 @@ const Register = () => {
                 confirm: formData.register.agreeTerms ? 1 : 0
             };
     
+            console.log('Отправка данных регистрации:', { ...userData, password: '***' });
+            
             // 1. Регистрация
             const response = await ApiService.register(userData);
             console.log('Ответ от регистрации:', response);
             
             if (response && !response.error) {
-                // Сохраняем email
-                const userEmail = formData.register.email;
-                localStorage.setItem('user_email', userEmail);
-                
                 setSuccessMessage('Регистрация успешна! Выполняется вход...');
                 
                 // 2. Автоматический вход после регистрации
                 setTimeout(async () => {
                     try {
                         const loginResult = await ApiService.login(
-                            userEmail,
+                            formData.register.email,
                             formData.register.password
                         );
                         
+                        console.log('Результат автоматического входа:', loginResult);
+                        
                         if (loginResult && loginResult.data && loginResult.data.token) {
-                            console.log('Автоматический вход выполнен');
-                            // Данные пользователя будут получены на странице профиля
-                            navigate('/profile');
+                            console.log('Автоматический вход выполнен, токен получен');
+                            
+                            // Сохраняем данные авторизации
+                            AuthService.login(loginResult.data.token, {
+                                name: formData.register.name,
+                                email: formData.register.email,
+                                phone: formData.register.phone
+                            });
+                            
+                            setSuccessMessage('Регистрация и вход выполнены успешно!');
+                            setTimeout(() => {
+                                navigate('/profile');
+                            }, 1000);
+                        } else {
+                            console.error('Ошибка при автоматическом входе: нет токена в ответе');
+                            setErrors({ login: 'Ошибка при автоматическом входе' });
                         }
                     } catch (loginError) {
                         console.error('Ошибка при автоматическом входе:', loginError);
@@ -124,7 +149,7 @@ const Register = () => {
                 }, 1500);
                 
             } else {
-                setErrors({ general: response.error?.message || 'Ошибка при регистрации' });
+                setErrors({ general: response?.error?.message || 'Ошибка при регистрации' });
             }
             
         } catch (error) {
@@ -159,20 +184,36 @@ const Register = () => {
         setSuccessMessage('');
     
         try {
+            console.log('Отправка данных входа:', {
+                email: formData.login.email,
+                password: '***'
+            });
+            
             // 1. Выполняем вход
             const result = await ApiService.login(
                 formData.login.email,
                 formData.login.password
             );
             
+            console.log('Результат входа:', result);
+            
             if (result && result.data && result.data.token) {
                 console.log('Вход выполнен, токен получен');
                 
-                // Сохраняем email (опционально, для отображения)
-                localStorage.setItem('user_email', formData.login.email);
+                // Пытаемся найти пользователя по email для получения полных данных
+                let userData = { email: formData.login.email };
+                try {
+                    const foundUser = await ApiService.findUserByEmail(formData.login.email);
+                    if (foundUser) {
+                        console.log('Пользователь найден:', foundUser);
+                        userData = { ...userData, ...foundUser };
+                    }
+                } catch (userError) {
+                    console.warn('Не удалось найти пользователя по email:', userError);
+                }
                 
-                // Данные пользователя будут получены на странице профиля
-                // через запрос GET /users с токеном
+                // Сохраняем данные авторизации
+                AuthService.login(result.data.token, userData);
                 
                 setSuccessMessage('Вход выполнен успешно!');
                 setTimeout(() => {
@@ -180,6 +221,7 @@ const Register = () => {
                 }, 1000);
                 
             } else {
+                console.error('Ошибка при входе: нет токена в ответе');
                 setErrors({ login: 'Ошибка при входе' });
             }
             
@@ -196,11 +238,12 @@ const Register = () => {
         }
     };
 
-    const handleInputChange = (formType, field, value) => {
+    // Исправленный обработчик ввода
+    const handleRegisterInputChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
-            [formType]: {
-                ...prev[formType],
+            register: {
+                ...prev.register,
                 [field]: value
             }
         }));
@@ -215,30 +258,38 @@ const Register = () => {
         }
     };
 
-    const renderPasswordRequirements = () => {
-        const password = formData.register.password;
-        const requirements = [
-            { text: 'Минимум 7 символов', met: password.length >= 7 },
-            { text: 'Хотя бы 1 цифра', met: /\d/.test(password) },
-            { text: 'Хотя бы 1 строчная буква', met: /[a-z]/.test(password) },
-            { text: 'Хотя бы 1 заглавная буква', met: /[A-Z]/.test(password) }
-        ];
-
-        return (
-            <div className="password-requirements mt-2">
-                {requirements.map((req, index) => (
-                    <div key={index} className={`requirement ${req.met ? 'met' : 'unmet'}`}>
-                        <i className={`bi ${req.met ? 'bi-check-circle' : 'bi-circle'}`}></i>
-                        <span>{req.text}</span>
-                    </div>
-                ))}
-            </div>
-        );
+    const handleLoginInputChange = (field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            login: {
+                ...prev.login,
+                [field]: value
+            }
+        }));
+        
+        // Очищаем ошибку при изменении поля
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
     };
+
+    const handleTabChange = (tab) => {
+        setActiveForm(tab);
+        setErrors({});
+        setSuccessMessage('');
+    };
+
+    const renderPasswordRequirements = () => (
+        <PasswordRequirements password={formData.register.password} />
+    );
 
     return (
         <div>
-            <Header isAuthenticated={false} />
+            <Header />
             
             <div className="register-container">
                 <div className="container">
@@ -265,34 +316,14 @@ const Register = () => {
                                     )}
 
                                     {/* Табы для переключения между формами */}
-                                    <div className="form-tabs">
-                                        <div className="form-tabs-container">
-                                            <button 
-                                                className={`form-tab ${activeForm === 'register' ? 'active' : ''}`}
-                                                onClick={() => {
-                                                    setActiveForm('register');
-                                                    setErrors({});
-                                                    setSuccessMessage('');
-                                                }}
-                                            >
-                                                Регистрация
-                                            </button>
-                                            <button 
-                                                className={`form-tab ${activeForm === 'login' ? 'active' : ''}`}
-                                                onClick={() => {
-                                                    setActiveForm('login');
-                                                    setErrors({});
-                                                    setSuccessMessage('');
-                                                }}
-                                            >
-                                                Вход
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <FormTabs 
+                                        activeForm={activeForm}
+                                        onTabChange={handleTabChange}
+                                    />
 
                                     {/* Форма регистрации */}
                                     {activeForm === 'register' && (
-                                        <form id="registerForm" onSubmit={handleRegisterSubmit}>
+                                        <form onSubmit={handleRegisterSubmit}>
                                             <div className="mb-3">
                                                 <label htmlFor="regName" className="form-label">Имя *</label>
                                                 <div className="input-group">
@@ -304,7 +335,7 @@ const Register = () => {
                                                         className={`form-control ${errors.name ? 'is-invalid' : ''}`}
                                                         id="regName" 
                                                         value={formData.register.name}
-                                                        onChange={(e) => handleInputChange('register', 'name', e.target.value)}
+                                                        onChange={(e) => handleRegisterInputChange('name', e.target.value)}
                                                         placeholder="Введите ваше имя" 
                                                         required
                                                         disabled={loading}
@@ -328,7 +359,7 @@ const Register = () => {
                                                         className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
                                                         id="regPhone" 
                                                         value={formData.register.phone}
-                                                        onChange={(e) => handleInputChange('register', 'phone', e.target.value)}
+                                                        onChange={(e) => handleRegisterInputChange('phone', e.target.value)}
                                                         placeholder="+7 (999) 123-45-67" 
                                                         required
                                                         disabled={loading}
@@ -352,7 +383,7 @@ const Register = () => {
                                                         className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                                                         id="regEmail" 
                                                         value={formData.register.email}
-                                                        onChange={(e) => handleInputChange('register', 'email', e.target.value)}
+                                                        onChange={(e) => handleRegisterInputChange('email', e.target.value)}
                                                         placeholder="Введите ваш email" 
                                                         required
                                                         disabled={loading}
@@ -376,7 +407,7 @@ const Register = () => {
                                                         className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                                         id="regPassword" 
                                                         value={formData.register.password}
-                                                        onChange={(e) => handleInputChange('register', 'password', e.target.value)}
+                                                        onChange={(e) => handleRegisterInputChange('password', e.target.value)}
                                                         placeholder="Придумайте пароль" 
                                                         required 
                                                         minLength="7"
@@ -402,7 +433,7 @@ const Register = () => {
                                                         className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                                                         id="regConfirmPassword" 
                                                         value={formData.register.confirmPassword}
-                                                        onChange={(e) => handleInputChange('register', 'confirmPassword', e.target.value)}
+                                                        onChange={(e) => handleRegisterInputChange('confirmPassword', e.target.value)}
                                                         placeholder="Повторите пароль" 
                                                         required
                                                         disabled={loading}
@@ -428,7 +459,7 @@ const Register = () => {
                                                     className={`form-check-input ${errors.agreeTerms ? 'is-invalid' : ''}`}
                                                     id="agreeTerms" 
                                                     checked={formData.register.agreeTerms}
-                                                    onChange={(e) => handleInputChange('register', 'agreeTerms', e.target.checked)}
+                                                    onChange={(e) => handleRegisterInputChange('agreeTerms', e.target.checked)}
                                                     required
                                                     disabled={loading}
                                                 />
@@ -465,7 +496,7 @@ const Register = () => {
 
                                     {/* Форма входа */}
                                     {activeForm === 'login' && (
-                                        <form id="loginForm" onSubmit={handleLoginSubmit}>
+                                        <form onSubmit={handleLoginSubmit}>
                                             {errors.login && (
                                                 <div className="alert alert-danger" role="alert">
                                                     {errors.login}
@@ -483,7 +514,7 @@ const Register = () => {
                                                         className="form-control"
                                                         id="loginEmail" 
                                                         value={formData.login.email}
-                                                        onChange={(e) => handleInputChange('login', 'email', e.target.value)}
+                                                        onChange={(e) => handleLoginInputChange('email', e.target.value)}
                                                         placeholder="Введите ваш email" 
                                                         required
                                                         disabled={loading}
@@ -502,7 +533,7 @@ const Register = () => {
                                                         className="form-control"
                                                         id="loginPassword" 
                                                         value={formData.login.password}
-                                                        onChange={(e) => handleInputChange('login', 'password', e.target.value)}
+                                                        onChange={(e) => handleLoginInputChange('password', e.target.value)}
                                                         placeholder="Введите ваш пароль" 
                                                         required
                                                         disabled={loading}
@@ -538,7 +569,6 @@ const Register = () => {
             </div>
 
             <Footer />
-            <LogoutModal />
         </div>
     );
 };

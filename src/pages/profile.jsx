@@ -6,7 +6,6 @@ import Footer from '../components/footer';
 import ProfileStats from '../components/profile-stats';
 import UserAds from '../components/user-ads';
 import LogoutModal from '../components/logout-modal';
-import AuthRequiredModal from '../components/auth-required-modal';
 import ApiService from '../services/api';
 import placeholderImage from '../assets/images/placeholder.svg';
 
@@ -610,7 +609,6 @@ const Profile = () => {
 
             <Footer />
             <LogoutModal onLogout={handleLogout} />
-            <AuthRequiredModal />
         </div>
     );
 };

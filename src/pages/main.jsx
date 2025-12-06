@@ -6,37 +6,41 @@ import CompanyInfo from '../components/company-info';
 import NewsletterSection from '../components/newsletter-section';
 import SearchHeader from '../components/search-header';
 import ApiService from '../services/api';
+import AuthService from '../services/AuthService';
 import placeholderImage from '../assets/images/placeholder.svg';
 
 const Main = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userName, setUserName] = useState('');
     const [sliderPets, setSliderPets] = useState([]);
     const [recentPets, setRecentPets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchSuggestions, setSearchSuggestions] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSlider, setShowSlider] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userName, setUserName] = useState('');
+
+    // Проверка авторизации
+    useEffect(() => {
+        const checkAuth = () => {
+            const authStatus = AuthService.isAuthenticated();
+            setIsAuthenticated(authStatus);
+            setUserName(AuthService.getUserName());
+        };
+
+        checkAuth();
+
+        // Подписываемся на события изменения авторизации
+        window.addEventListener('authChange', checkAuth);
+        window.addEventListener('userDataUpdate', checkAuth);
+
+        return () => {
+            window.removeEventListener('authChange', checkAuth);
+            window.removeEventListener('userDataUpdate', checkAuth);
+        };
+    }, []);
 
     // Загрузка данных для слайдера
     useEffect(() => {
-        const token = localStorage.getItem('auth_token');
-        setIsAuthenticated(!!token);
-        
-        if (token) {
-            const userDataStr = localStorage.getItem('user_data');
-            if (userDataStr) {
-                try {
-                    const userData = JSON.parse(userDataStr);
-                    if (userData.name) {
-                        setUserName(userData.name);
-                    }
-                } catch (error) {
-                    console.error('Ошибка при чтении user_data:', error);
-                }
-            }
-        }
-
         const loadData = async () => {
             try {
                 setLoading(true);
@@ -58,9 +62,9 @@ const Main = () => {
                 const recentResponse = await ApiService.getRecentPets();
                 if (recentResponse && recentResponse.data && recentResponse.data.orders) {
                     // Сортируем по дате
-                    const sortedPets = recentResponse.data.orders.sort((a, b) => {
-                        return new Date(b.date) - new Date(a.date);
-                    }).slice(0, 6); // Берем только 6 последних
+                    const sortedPets = recentResponse.data.orders
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .slice(0, 6);
                     
                     setRecentPets(sortedPets);
                 }
@@ -82,7 +86,7 @@ const Main = () => {
                 try {
                     const response = await ApiService.searchPets(searchQuery, 1000);
                     if (response && response.data && response.data.orders) {
-                        setSearchSuggestions(response.data.orders.slice(0, 5)); // Показываем до 5 подсказок
+                        setSearchSuggestions(response.data.orders.slice(0, 5));
                     }
                 } catch (error) {
                     console.error('Ошибка при поиске:', error);
@@ -132,7 +136,7 @@ const Main = () => {
     if (loading) {
         return (
             <div>
-                <Header isAuthenticated={false} />
+                <Header />
                 <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Загрузка...</span>
@@ -145,7 +149,7 @@ const Main = () => {
 
     return (
         <div>
-            <Header isAuthenticated={isAuthenticated} userName={userName} />
+            <Header />
             
             <SearchHeader 
                 searchQuery={searchQuery}

@@ -1,4 +1,3 @@
-// src/components/newsletter-section.jsx
 import React, { useState } from 'react';
 
 const NewsletterSection = ({ onSubmit }) => {
