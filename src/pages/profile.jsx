@@ -271,37 +271,6 @@ const Profile = () => {
         }
     };
 
-    const handlePasswordSubmit = async (e) => {
-        e.preventDefault();
-        
-        const currentPassword = e.target.currentPassword.value;
-        const newPassword = e.target.newPassword.value;
-        const confirmPassword = e.target.confirmPassword.value;
-        
-        // Валидация пароля
-        const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{7,}$/;
-        
-        if (!passwordRegex.test(newPassword)) {
-            setError('Новый пароль должен содержать минимум 7 символов, 1 цифру, 1 строчную и 1 заглавную букву');
-            setTimeout(() => setError(null), 3000);
-            return;
-        }
-        
-        if (newPassword !== confirmPassword) {
-            setError('Пароли не совпадают');
-            setTimeout(() => setError(null), 3000);
-            return;
-        }
-        
-        // Здесь должен быть API запрос для смены пароля
-        // Так как в документации нет endpoint для смены пароля,
-        // этот функционал не реализован
-        
-        setSuccessMessage('Запрос на смену пароля отправлен');
-        setTimeout(() => setSuccessMessage(''), 3000);
-        e.target.reset();
-    };
-
     const handleLogout = () => {
         console.log('Выход из профиля');
         ApiService.clearToken();
@@ -553,53 +522,7 @@ const Profile = () => {
                                         </div>
                                     </div>
 
-                                    {/* Смена пароля */}
-                                    <div className="card">
-                                        <div className="card-header">
-                                            <h4 className="card-title h5 mb-0">
-                                                <i className="bi bi-shield-lock me-2"></i>Смена пароля
-                                            </h4>
-                                        </div>
-                                        <div className="card-body">
-                                            <form onSubmit={handlePasswordSubmit}>
-                                                <div className="mb-3">
-                                                    <label htmlFor="currentPassword" className="form-label">Текущий пароль</label>
-                                                    <input 
-                                                        type="password" 
-                                                        className="form-control" 
-                                                        id="currentPassword" 
-                                                        placeholder="Введите текущий пароль" 
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="mb-3">
-                                                    <label htmlFor="newPassword" className="form-label">Новый пароль</label>
-                                                    <input 
-                                                        type="password" 
-                                                        className="form-control" 
-                                                        id="newPassword" 
-                                                        placeholder="Введите новый пароль" 
-                                                        minLength="7" 
-                                                        required
-                                                    />
-                                                    <div className="form-text">Пароль должен содержать не менее 7 символов, включая цифры, строчные и заглавные буквы</div>
-                                                </div>
-                                                <div className="mb-3">
-                                                    <label htmlFor="confirmPassword" className="form-label">Подтвердите новый пароль</label>
-                                                    <input 
-                                                        type="password" 
-                                                        className="form-control" 
-                                                        id="confirmPassword" 
-                                                        placeholder="Повторите новый пароль" 
-                                                        required
-                                                    />
-                                                </div>
-                                                <button type="submit" className="btn btn-primary">
-                                                    <i className="bi bi-key me-1"></i>Сменить пароль
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
+                                    
                                 </section>
                             )}
                         </div>

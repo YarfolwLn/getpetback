@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
+import LogoutModal from '../components/logout-modal';
 import SearchHeader from '../components/search-header';
 import ApiService from '../services/api';
 import placeholderImage from '../assets/images/placeholder.svg';
@@ -144,21 +145,34 @@ const SearchPage = () => {
         if (searchQuery.length > 2) {
             const timer = setTimeout(async () => {
                 try {
-                    // Используем searchOrders для получения подсказок
                     const response = await ApiService.searchOrders({ kind: searchQuery });
                     
                     if (response && response.data && response.data.orders) {
-                        // Берем только первые 5 результатов для подсказок
                         const suggestions = response.data.orders.slice(0, 10);
                         
-                        // Данные для подсказок
-                        const formattedSuggestions = suggestions.map(order => ({
-                            id: order.id,
-                            kind: order.kind || '',
-                            description: order.description || '',
-                            district: order.district || '',
-                            photo: order.photo || order.photos || null
-                        }));
+                        // Уникальные названия без повторов
+                        const uniqueKinds = new Set();
+                        const formattedSuggestions = [];
+                        
+                        for (const order of suggestions) {
+                            const kind = order.kind?.trim() || '';
+                            if (kind && !uniqueKinds.has(kind.toLowerCase())) {
+                                uniqueKinds.add(kind.toLowerCase());
+                                formattedSuggestions.push({
+                                    id: order.id,
+                                    kind: kind,
+                                    // Оставляем другие поля пустыми, так как они не отображаются
+                                    description: '',
+                                    district: '',
+                                    photo: order.photo || order.photos || null
+                                });
+                            }
+                            
+                            // Ограничиваем максимум 5 уникальными подсказками
+                            if (formattedSuggestions.length >= 5) {
+                                break;
+                            }
+                        }
                         
                         setSearchSuggestions(formattedSuggestions);
                     } else {
@@ -168,7 +182,7 @@ const SearchPage = () => {
                     console.error('Ошибка при поиске подсказок:', error);
                     setSearchSuggestions([]);
                 }
-            }, 300); // Задержка 300мс для быстрого отклика
+            }, 300);
     
             return () => clearTimeout(timer);
         } else {
@@ -426,11 +440,13 @@ const SearchPage = () => {
                                                             : ad.description}
                                                     </p>
                                                     <div className="mt-auto">
-                                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                                            <span className="badge district-badge">{ad.district}</span>
-                                                            <span className={`badge ${getStatusBadge(ad.registred)}`}>
-                                                                {ad.registred ? 'Зарегистрировано' : 'Не зарегистрировано'}
-                                                            </span>
+                                                        <div className="card-meta-info mt-2">
+                                                            <div className="d-flex flex-wrap gap-2">
+                                                                <span className="badge district-badge">{ad.district}</span>
+                                                                <span className={`badge ${getStatusBadge(ad.registred)}`}>
+                                                                    {ad.registred ? 'Зарегистрировано' : 'Не зарегистрировано'}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                         {ad.mark && (
                                                             <div className="mb-2">
@@ -440,13 +456,12 @@ const SearchPage = () => {
                                                     </div>
                                                 </div>
                                                 <div className="card-footer">
-                                                    <small className="text-muted">{ad.date}</small>
-                                                    <a 
-                                                        className="btn btn-outline-primary btn-sm float-end"
-                                                        href={`/pet/${ad.id}`}
-                                                    >
-                                                        Подробнее
-                                                    </a>
+                                                    <div className="d-flex justify-content-between align-items-center flex-wrap">
+                                                        <small className="text-muted">{ad.date}</small>
+                                                        <a className="btn btn-outline-primary btn-sm" href={`/pet/${ad.id}`}>
+                                                            Подробнее
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -459,7 +474,7 @@ const SearchPage = () => {
                     </>
                 )}
             </div>
-
+            <LogoutModal />
             <Footer />
         </div>
     );

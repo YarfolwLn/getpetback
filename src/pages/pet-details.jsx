@@ -1,8 +1,8 @@
-// src/pages/pet-details.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/footer';
+import LogoutModal from '../components/logout-modal';
 import ApiService from '../services/api';
 import placeholderImage from '../assets/images/placeholder.svg';
 
@@ -187,7 +187,7 @@ const PetDetails = () => {
                     className="btn btn-outline-secondary mb-4"
                     onClick={() => navigate(-1)}
                 >
-                    <i className="bi bi-arrow-left me-2"></i>Назад к поиску
+                    <i className="bi bi-arrow-left me-2"></i>Назад
                 </button>
                 
                 <div className="card">
@@ -330,12 +330,6 @@ const PetDetails = () => {
                                     
                                     <div className="mt-4">
                                         <button 
-                                            className="btn btn-primary me-2"
-                                            onClick={() => window.history.back()}
-                                        >
-                                            <i className="bi bi-arrow-left me-1"></i>Назад
-                                        </button>
-                                        <button 
                                             className="btn btn-outline-primary"
                                             onClick={() => navigate('/search')}
                                         >
@@ -349,6 +343,7 @@ const PetDetails = () => {
                 </div>
             </div>
 
+            <LogoutModal />
             <Footer />
         </div>
     );

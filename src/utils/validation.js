@@ -4,7 +4,7 @@ export const validationRules = {
         message: 'Имя должно содержать только кириллицу, пробелы и дефисы'
     },
     phone: {
-        pattern: /^\+?[0-9\s\-\(\)]+$/,
+        pattern: /^\+?[0-9\s\-()]+$/,
         message: 'Некорректный номер телефона'
     },
     email: {

@@ -8,10 +8,10 @@ const LoginForm = ({
     onInputChange 
 }) => {
     return (
-        <form id="loginForm">
-            {errors.login && (
+        <div>
+            {errors.general && (
                 <div className="alert alert-danger" role="alert">
-                    {errors.login}
+                    {errors.general}
                 </div>
             )}
             
@@ -71,7 +71,7 @@ const LoginForm = ({
                     )}
                 </button>
             </div>
-        </form>
+        </div>
     );
 };
 

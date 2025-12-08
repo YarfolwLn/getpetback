@@ -1,4 +1,3 @@
-// src/components/RegisterForm.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -10,7 +9,7 @@ const RegisterForm = ({
     renderPasswordRequirements 
 }) => {
     return (
-        <form id="registerForm">
+        <div>
             <div className="mb-3">
                 <label htmlFor="regName" className="form-label">Имя *</label>
                 <div className="input-group">
@@ -178,7 +177,7 @@ const RegisterForm = ({
                     )}
                 </button>
             </div>
-        </form>
+        </div>
     );
 };
 

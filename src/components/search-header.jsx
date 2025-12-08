@@ -97,16 +97,6 @@ const SearchHeader = ({ searchQuery: externalSearchQuery, onSearchChange, sugges
                                                     >
                                                         <div className="suggestion-text">
                                                             <strong>{suggestion.kind}</strong>
-                                                            <small className="text-muted d-block">
-                                                                {suggestion.description && suggestion.description.length > 50 
-                                                                    ? `${suggestion.description.substring(0, 50)}...`
-                                                                    : suggestion.description}
-                                                            </small>
-                                                        </div>
-                                                        <div className="suggestion-meta">
-                                                            <span className="badge bg-light text-dark">
-                                                                {suggestion.district}
-                                                            </span>
                                                         </div>
                                                     </div>
                                                 ))}

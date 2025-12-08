@@ -1,7 +1,7 @@
-// src/pages/main.jsx
 import React, { useState, useEffect } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
+import LogoutModal from '../components/logout-modal';
 import CompanyInfo from '../components/company-info';
 import NewsletterSection from '../components/newsletter-section';
 import SearchHeader from '../components/search-header';
@@ -16,8 +16,8 @@ const Main = () => {
     const [searchSuggestions, setSearchSuggestions] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSlider, setShowSlider] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userName, setUserName] = useState('');
+    const [, setIsAuthenticated] = useState(false);
+    const [, setUserName] = useState('');
 
     // Проверка авторизации
     useEffect(() => {
@@ -162,7 +162,7 @@ const Main = () => {
             {/* Карусель со слайдером */}
             {showSlider && (
                 <div className="carousel-container">
-                    <h2 className="carousel-title">Животные, которые нашли хозяев</h2>
+                    <h2 className="carousel-title">Нашли хозяев</h2>
                     <div id="carouselExampleCaptions" className="carousel slide" data-bs-ride="carousel">
                         <div className="carousel-indicators">
                             {sliderPets.map((_, index) => (
@@ -225,7 +225,7 @@ const Main = () => {
 
             {/* Последние найденные животные */}
             <div className="container mt-5">
-                <h2 className="text-center mb-4">Последние найденные животные</h2>
+                <h2 className="text-center mb-4">Ещё не нашли</h2>
                 {recentPets.length === 0 ? (
                     <div className="text-center py-4">
                         <p className="text-muted">Нет данных о найденных животных</p>
@@ -272,7 +272,7 @@ const Main = () => {
             </div>
 
             <NewsletterSection onSubmit={handleNewsletterSubmit} />
-
+            <LogoutModal />
             <Footer />
         </div>
     );

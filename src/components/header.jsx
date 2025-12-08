@@ -1,4 +1,3 @@
-// src/components/header.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AuthService from '../services/AuthService';
@@ -61,7 +60,7 @@ const Header = () => {
                                     <i className="bi bi-person me-1"></i><span className="fw-default">{userName || 'Пользователь'}</span> | Личный кабинет
                                 </Link>
                                 <button className="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                                    <i className="bi bi-box-arrow-right me-1" ></i>Выйти
+                                    <i className="bi bi-box-arrow-right me-1"></i>Выйти
                                 </button>
                             </>
                         ) : (
