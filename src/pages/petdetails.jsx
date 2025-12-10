@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../components/header';
-import Footer from '../components/footer';
-import LogoutModal from '../components/logout-modal';
-import ApiService from '../services/api';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import LogoutModal from '../components/LogoutModal';
+import ApiService from '../services/Api';
 import placeholderImage from '../assets/images/placeholder.svg';
 
 const PetDetails = () => {

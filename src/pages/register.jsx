@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/header';
-import Footer from '../components/footer';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import FormTabs from '../components/FormTabs';
 import RegisterForm from '../components/RegisterForm';
 import LoginForm from '../components/LoginForm';
 import PasswordRequirements from '../components/PasswordRequirements';
-import ApiService from '../services/api';
+import ApiService from '../services/Api';
 import AuthService from '../services/AuthService';
-import { validateField } from '../utils/validation';
+import { validateField } from '../utils/Validation';
 
 const Register = () => {
     const [activeForm, setActiveForm] = useState('register');

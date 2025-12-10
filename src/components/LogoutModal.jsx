@@ -1,5 +1,5 @@
 import React from 'react';
-import ApiService from '../services/api';
+import ApiService from '../services/Api';
 import { useNavigate } from 'react-router-dom';
 
 const LogoutModal = ({ onLogout }) => {

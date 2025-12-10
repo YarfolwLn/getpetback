@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../components/header';
-import Footer from '../components/footer';
-import LogoutModal from '../components/logout-modal';
-import CompanyInfo from '../components/company-info';
-import NewsletterSection from '../components/newsletter-section';
-import SearchHeader from '../components/search-header';
-import ApiService from '../services/api';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import LogoutModal from '../components/LogoutModal';
+import CompanyInfo from '../components/Company-info';
+import NewsletterSection from '../components/NewsletterSection';
+import SearchHeader from '../components/SearchHeader';
+import ApiService from '../services/Api';
 import AuthService from '../services/AuthService';
 import placeholderImage from '../assets/images/placeholder.svg';
 

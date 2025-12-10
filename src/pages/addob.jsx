@@ -1,12 +1,12 @@
 // src/pages/addob.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/header';
-import Footer from '../components/footer';
-import LogoutModal from '../components/logout-modal';
-import ApiService from '../services/api';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import LogoutModal from '../components/LogoutModal';
+import ApiService from '../services/Api';
 import AuthService from '../services/AuthService';
-import { validateField } from '../utils/validation';
+import { validateField } from '../utils/Validation';
 
 const Addob = () => {
     const navigate = useNavigate();

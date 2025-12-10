@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Header from '../components/header';
-import Footer from '../components/footer';
-import LogoutModal from '../components/logout-modal';
-import SearchHeader from '../components/search-header';
-import ApiService from '../services/api';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import LogoutModal from '../components/LogoutModal';
+import SearchHeader from '../components/SearchHeader';
+import ApiService from '../services/Api';
 import placeholderImage from '../assets/images/placeholder.svg';
 
 const SearchPage = () => {

@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Main from './pages/main';
@@ -6,7 +5,7 @@ import SearchPage from './pages/searchpage';
 import Profile from './pages/profile';
 import Register from './pages/register';
 import Addob from './pages/addob';
-import PetDetails from './pages/pet-details';
+import PetDetails from './pages/petdetails';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';

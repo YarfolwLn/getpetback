@@ -1,5 +1,4 @@
-// src/services/api.js
-import { API_HOST, BASE_URL } from '../config/api';
+import { API_HOST, BASE_URL } from '../config/Api';
 
 class ApiService {
     constructor() {

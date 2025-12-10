@@ -1,7 +1,6 @@
-// src/components/user-ads.jsx
 import React, { useState } from 'react';
-import EditAdModal from '../components/edit-ad-modal';
-import DeleteAdModal from '../components/delete-ad-modal';
+import EditAdModal from './EditAdModal';
+import DeleteAdModal from './DeleteAdModal';
 import placeholderImage from '../assets/images/placeholder.svg';
 
 const UserAds = ({ ads, onAdUpdate, onAdDelete, getStatusClass }) => {
