@@ -2,23 +2,6 @@
   "name": "pets.site",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://yarfolwln.github.io/getpetback",
-  "description": "Веб-приложение для поиска домашних животных - YarfPets",
-  "keywords": [
-    "react",
-    "pets",
-    "animals",
-    "lost-and-found",
-    "search"
-  ],
-  "author": "Mark Faerberg",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yarfolwln/getpetback.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yarfolwln/getpetback/issues"
-  },
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -36,9 +19,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
