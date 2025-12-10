@@ -21,7 +21,6 @@ const SearchPage = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [searchSuggestions, setSearchSuggestions] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    // Удалена неиспользуемая переменная userName
     const pageSize = 8;
 
     const districts = [
@@ -228,7 +227,7 @@ const SearchPage = () => {
     };
 
     const getStatusBadge = (registred) => {
-        return registred ? 'bg-success' : 'bg-secondary';
+        return registred ? 'bg-success bg-opacity-25 text-success' : 'bg-secondary bg-opacity-25 text-secondary';
     };
 
     const renderPagination = () => {
@@ -324,7 +323,7 @@ const SearchPage = () => {
                 suggestions={searchSuggestions}
             />
             
-            <div className="container mt-4">
+            <div className="container mt-4 main-content-container">
                 <div className="search-filters card mb-4">
                     <div className="card-body">
                         <h4 className="mb-3">Расширенный поиск</h4>
@@ -442,7 +441,7 @@ const SearchPage = () => {
                                                     <div className="mt-auto">
                                                         <div className="card-meta-info mt-2">
                                                             <div className="d-flex flex-wrap gap-2">
-                                                                <span className="badge district-badge">{ad.district}</span>
+                                                            <span className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{ad.district}</span>
                                                                 <span className={`badge ${getStatusBadge(ad.registred)}`}>
                                                                     {ad.registred ? 'Зарегистрировано' : 'Не зарегистрировано'}
                                                                 </span>

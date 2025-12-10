@@ -313,7 +313,7 @@ const Profile = () => {
     return (
         <div>
             <Header isAuthenticated={true} userName={userData.name} />
-            
+
             {/* Сообщения об ошибках и успехе */}
             {error && (
                 <div className="alert-fixed-top">
@@ -354,7 +354,7 @@ const Profile = () => {
                 </div>
             </header>
 
-            <main className="container mt-4">
+            <main className="container mt-4 main-content-container">
                 <div className="row">
                     {/* Боковая панель */}
                     <div className="col-md-3">

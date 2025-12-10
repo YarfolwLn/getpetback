@@ -130,7 +130,7 @@ const Main = () => {
     };
 
     const getStatusBadge = (registered) => {
-        return registered ? 'bg-success' : 'bg-secondary';
+        return registered ? 'bg-success bg-opacity-25 text-success' : 'bg-secondary bg-opacity-25 text-secondary';
     };
 
     if (loading) {
@@ -150,129 +150,129 @@ const Main = () => {
     return (
         <div>
             <Header />
-            
-            <SearchHeader 
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                suggestions={searchSuggestions}
-            />
+            <div className="main-content-container">
+                <SearchHeader 
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    suggestions={searchSuggestions}
+                />
 
-            <CompanyInfo />
+                <CompanyInfo />
 
-            {/* Карусель со слайдером */}
-            {showSlider && (
-                <div className="carousel-container">
-                    <h2 className="carousel-title">Нашли хозяев</h2>
-                    <div id="carouselExampleCaptions" className="carousel slide" data-bs-ride="carousel">
-                        <div className="carousel-indicators">
-                            {sliderPets.map((_, index) => (
-                                <button 
-                                    key={index}
-                                    type="button" 
-                                    data-bs-target="#carouselExampleCaptions" 
-                                    data-bs-slide-to={index}
-                                    className={index === 0 ? "active" : ""}
-                                    aria-label={`Slide ${index + 1}`}
-                                ></button>
-                            ))}
-                        </div>
-                        <div className="carousel-inner">
-                            {sliderPets.map((pet, index) => (
-                                <div key={pet.id} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
-                                    <div className="row align-items-center">
-                                        <div className="col-md-6">
-                                            <div className="carousel-image-container">
-                                                <img 
-                                                    src={pet.image || placeholderImage} 
-                                                    className="d-block w-100 square-slider-image" 
-                                                    alt={pet.kind} 
-                                                    style={{ objectFit: 'cover', height: '400px' }}
-                                                    onError={(e) => {
-                                                        e.target.src = placeholderImage;
-                                                        e.target.style.objectFit = 'contain';
-                                                    }}
-                                                />
+                {/* Карусель со слайдером */}
+                {showSlider && (
+                    <div className="carousel-container">
+                        <h2 className="carousel-title">Нашли хозяев</h2>
+                        <div id="carouselExampleCaptions" className="carousel slide" data-bs-ride="carousel">
+                            <div className="carousel-indicators">
+                                {sliderPets.map((_, index) => (
+                                    <button 
+                                        key={index}
+                                        type="button" 
+                                        data-bs-target="#carouselExampleCaptions" 
+                                        data-bs-slide-to={index}
+                                        className={index === 0 ? "active" : ""}
+                                        aria-label={`Slide ${index + 1}`}
+                                    ></button>
+                                ))}
+                            </div>
+                            <div className="carousel-inner">
+                                {sliderPets.map((pet, index) => (
+                                    <div key={pet.id} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
+                                        <div className="row align-items-center">
+                                            <div className="col-md-6">
+                                                <div className="carousel-image-container">
+                                                    <img 
+                                                        src={pet.image || placeholderImage} 
+                                                        className="d-block w-100 square-slider-image" 
+                                                        alt={pet.kind} 
+                                                        style={{ objectFit: 'cover', height: '400px' }}
+                                                        onError={(e) => {
+                                                            e.target.src = placeholderImage;
+                                                            e.target.style.objectFit = 'contain';
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="carousel-content">
-                                                <h4>{pet.kind}</h4>
-                                                <p>{pet.description}</p>
-                                                <div className="mt-3">
-                                                    <span className="badge bg-success">Хозяин найден</span>
+                                            <div className="col-md-6">
+                                                <div className="carousel-content">
+                                                    <h4>{pet.kind}</h4>
+                                                    <p>{pet.description}</p>
+                                                    <div className="mt-3">
+                                                        <span className="badge bg-success">Хозяин найден</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                            {sliderPets.length > 1 && (
+                                <>
+                                    <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                                        <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span className="visually-hidden">Previous</span>
+                                    </button>
+                                    <button className="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                                        <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span className="visually-hidden">Next</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Последние найденные животные */}
+                <div className="container mt-5">
+                    <h2 className="text-center mb-4">В поисках</h2>
+                    {recentPets.length === 0 ? (
+                        <div className="text-center py-4">
+                            <p className="text-muted">Нет данных о найденных животных</p>
+                        </div>
+                    ) : (
+                        <div className="row">
+                            {recentPets.map(pet => (
+                                <div key={pet.id} className="col-md-4 mb-4">
+                                    <div className="card h-100">
+                                        <img 
+                                            src={pet.photo || pet.photos || placeholderImage} 
+                                            className="card-img-top" 
+                                            alt={pet.kind}
+                                            style={{ height: '250px', objectFit: 'cover' }}
+                                            onError={(e) => {
+                                                e.target.src = placeholderImage;
+                                                e.target.style.objectFit = 'contain';
+                                            }}
+                                        />
+                                        <div className="card-body">
+                                            <h5 className="card-title">{pet.kind}</h5>
+                                            <p className="card-text">{pet.description}</p>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <span className="badge district-badge">{pet.district}</span>
+                                                <span className={`badge ${getStatusBadge(pet.registered)}`}>
+                                                    {pet.registered ? 'Зарегистрировано' : 'Не зарегистрировано'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="card-footer">
+                                            <small className="text-muted">{pet.date}</small>
+                                            <button 
+                                                className="btn btn-outline-primary btn-sm float-end"
+                                                onClick={() => window.location.href = `/pet/${pet.id}`}
+                                            >
+                                                Подробнее
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                        {sliderPets.length > 1 && (
-                            <>
-                                <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-                                    <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span className="visually-hidden">Previous</span>
-                                </button>
-                                <button className="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-                                    <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span className="visually-hidden">Next</span>
-                                </button>
-                            </>
-                        )}
-                    </div>
+                    )}
                 </div>
-            )}
-
-            {/* Последние найденные животные */}
-            <div className="container mt-5">
-                <h2 className="text-center mb-4">Ещё не нашли</h2>
-                {recentPets.length === 0 ? (
-                    <div className="text-center py-4">
-                        <p className="text-muted">Нет данных о найденных животных</p>
-                    </div>
-                ) : (
-                    <div className="row">
-                        {recentPets.map(pet => (
-                            <div key={pet.id} className="col-md-4 mb-4">
-                                <div className="card h-100">
-                                    <img 
-                                        src={pet.photo || pet.photos || placeholderImage} 
-                                        className="card-img-top" 
-                                        alt={pet.kind}
-                                        style={{ height: '250px', objectFit: 'cover' }}
-                                        onError={(e) => {
-                                            e.target.src = placeholderImage;
-                                            e.target.style.objectFit = 'contain';
-                                        }}
-                                    />
-                                    <div className="card-body">
-                                        <h5 className="card-title">{pet.kind}</h5>
-                                        <p className="card-text">{pet.description}</p>
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <span className="badge district-badge">{pet.district}</span>
-                                            <span className={`badge ${getStatusBadge(pet.registered)}`}>
-                                                {pet.registered ? 'Зарегистрировано' : 'Не зарегистрировано'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="card-footer">
-                                        <small className="text-muted">{pet.date}</small>
-                                        <button 
-                                            className="btn btn-outline-primary btn-sm float-end"
-                                            onClick={() => window.location.href = `/pet/${pet.id}`}
-                                        >
-                                            Подробнее
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                <NewsletterSection onSubmit={handleNewsletterSubmit} />
+                <LogoutModal />
             </div>
-
-            <NewsletterSection onSubmit={handleNewsletterSubmit} />
-            <LogoutModal />
             <Footer />
         </div>
     );

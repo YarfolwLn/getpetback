@@ -282,8 +282,6 @@ class ApiService {
         if (result.data && result.data.token) {
             this.setToken(result.data.token);
 
-            // После успешного входа, попробуем найти пользователя по email
-            // Так как API не предоставляет /users/me, нужно искать другим способом
             try {
                 // Запросим всех пользователей (если это возможно)
                 // или получим ID через другой endpoint
@@ -298,7 +296,7 @@ class ApiService {
                     localStorage.setItem('user_id', user.id.toString());
                     console.log('Пользователь найден по email, ID:', user.id);
                 } else {
-                    console.warn('Пользователь не найден по email, нужно будет получить ID позже');
+                    console.log('Пользователь не найден по email, нужно будет получить ID позже');
                 }
             } catch (error) {
                 console.warn('Не удалось получить пользователя по email, возможно API не поддерживает поиск:', error);

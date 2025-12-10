@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AuthService from '../services/AuthService';
-import logo from '../assets/images/logo.jpg';
+import logo from '../assets/images/logo.png';
 
 const Header = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);

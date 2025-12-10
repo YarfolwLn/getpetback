@@ -1,4 +1,3 @@
-// src/services/AuthService.js
 class AuthService {
     static isAuthenticated() {
         const token = localStorage.getItem('auth_token');

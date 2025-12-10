@@ -275,7 +275,7 @@ const Register = () => {
         <div>
             <Header />
             
-            <div className="register-container">
+            <div className="register-container main-content-container">
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-12 col-md-8 col-lg-6">
@@ -335,7 +335,6 @@ const Register = () => {
                     </div>
                 </div>
             </div>
-
             <Footer />
         </div>
     );

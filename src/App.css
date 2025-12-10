@@ -40,9 +40,40 @@
 @media (max-width: 991px) {
     .modern-navbar .navbar-collapse {
         padding-top: 15px;
+        padding-bottom: 20px;
     }
     
     .modern-navbar .d-flex {
+        margin-top: 15px;
+        padding-bottom: 20px;
+    }
+
+    .modern-navbar .btn {
+        margin-bottom: 10px; /* Отступ между кнопками */
+    }
+
+    .modern-navbar .btn:last-child {
+        margin-bottom: 0;
+    }
+
+    .modern-navbar .navbar-nav .nav-link {
+        padding: 10px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .modern-navbar .navbar-nav .nav-link:last-child {
+        border-bottom: none;
+    }
+}
+
+/* БЛОК - для маленьких экранов */
+@media (max-width: 576px) {
+    .modern-navbar .navbar-collapse {
+        padding-bottom: 20px;
+    }
+    
+    .modern-navbar .d-flex {
+        padding-top: 20px;
         margin-top: 15px;
     }
 }
@@ -603,6 +634,104 @@
     }
     
     .suggestion-text strong {
+        font-size: 0.9rem;
+    }
+}
+/* ===== ОБЩИЙ ОТСТУП ДЛЯ ВСЕХ СТРАНИЦ ===== */
+.main-content-container {
+    min-height: calc(100vh - 300px); /* Минимальная высота минус высота футера и хедера */
+    padding-bottom: 3rem; /* Отступ снизу перед футером */
+}
+/* ===== СТИЛИ ДЛЯ ТАБОВ РЕГИСТРАЦИИ/ВХОДА ===== */
+.form-tabs {
+    margin-bottom: 2rem;
+}
+
+.form-tabs-container {
+    display: flex;
+    border-radius: 12px;
+    background-color: #f8f9fa;
+    padding: 4px;
+    margin-bottom: 1.5rem;
+}
+
+.form-tab {
+    flex: 1;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.form-tab:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #495057;
+}
+
+.form-tab.active {
+    background-color: white;
+    color: #667eea;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* ===== СТИЛИ ТРЕБОВАНИЯ К ПАРОЛЮ ===== */
+.password-requirements {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+    border-left: 3px solid #dee2e6;
+}
+
+.password-requirements .requirement {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.password-requirements .requirement:last-child {
+    margin-bottom: 0;
+}
+
+.password-requirements .requirement i {
+    margin-right: 8px;
+    font-size: 0.9rem;
+}
+
+.password-requirements .requirement.met i {
+    color: #28a745;
+}
+
+.password-requirements .requirement.unmet i {
+    color: #6c757d;
+}
+
+.password-requirements .requirement.met span {
+    color: #28a745;
+}
+
+.password-requirements .requirement.unmet span {
+    color: #6c757d;
+}
+
+/* Акцента на активных требованиях */
+.password-requirements .requirement.met span {
+    transition: color 0.3s ease;
+}
+
+/* Адаптивность табов */
+@media (max-width: 576px) {
+    .form-tab {
+        padding: 10px 16px;
         font-size: 0.9rem;
     }
 }

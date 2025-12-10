@@ -73,7 +73,7 @@ const PetDetails = () => {
     }, [id]);
 
     const getStatusBadge = (registered) => {
-        return registered ? 'bg-success' : 'bg-secondary';
+        return registered ? 'bg-success bg-opacity-25 text-success' : 'bg-secondary bg-opacity-25 text-secondary';
     };
 
     const handlePreviousImage = () => {
@@ -182,7 +182,7 @@ const PetDetails = () => {
         <div>
             <Header isAuthenticated={isAuthenticated} userName={userName} />
             
-            <div className="container py-5">
+            <div className="container py-5 main-content-container">
                 <button 
                     className="btn btn-outline-secondary mb-4"
                     onClick={() => navigate(-1)}

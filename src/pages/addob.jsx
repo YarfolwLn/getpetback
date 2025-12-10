@@ -411,7 +411,7 @@ const Addob = () => {
         <div>
             <Header />
             
-            <div className="container form-container">
+            <div className="container form-container main-content-container">
                 <div className="card shadow">
                     <div className="card-header bg-primary text-white">
                         <h2 className="card-title mb-0">
